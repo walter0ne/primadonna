@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(npm create:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npm run:*)",
+      "Bash(node --check src/index.js)",
+      "Bash(node --check src/routes/auth.js)",
+      "Bash(node --check src/routes/services.js)",
+      "Bash(node --check src/routes/appointments.js)",
+      "Bash(node --check src/routes/availability.js)",
+      "Bash(npx prisma:*)",
+      "Bash(node prisma/seed.js)"
+    ]
+  }
+}
