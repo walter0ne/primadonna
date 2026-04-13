@@ -18,8 +18,15 @@
       </div>
 
       <!-- Info -->
-      <div class="text-center text-sm text-accent-warm/50 space-y-1">
-        <p>📍 [Indirizzo del salone] &nbsp;·&nbsp; 📞 [Telefono]</p>
+      <div class="text-center text-sm text-accent-warm/60 space-y-2">
+        <p class="flex items-center justify-center gap-2">
+          <span>📍</span>
+          <span>Corso Campano, 47 — 80014 Giugliano in Campania (NA)</span>
+        </p>
+        <p class="flex items-center justify-center gap-2">
+          <span>📞</span>
+          <a href="tel:+393489135964" class="hover:text-accent transition-colors">+39 348 913 5964</a>
+        </p>
         <p class="text-xs mt-4 text-accent/30">© {{ new Date().getFullYear() }} Primadonna. Tutti i diritti riservati.</p>
       </div>
     </div>

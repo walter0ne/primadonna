@@ -26,27 +26,44 @@ const todayAppointments = computed(() =>
 </script>
 
 <template>
-  <div class="flex min-h-screen">
+  <!-- flex row su desktop, colonna su mobile -->
+  <div class="flex min-h-screen min-h-dvh bg-background">
     <AppSidebar />
 
-    <main class="flex-1 p-6 bg-background overflow-auto">
-      <div class="mb-6">
-        <h1 class="section-title">Dashboard</h1>
-        <p class="text-gray-500 text-sm mt-1">Benvenuto, {{ authStore.admin?.name }}</p>
+    <!-- Su mobile: padding-top per top bar, padding-bottom per bottom nav -->
+    <main class="flex-1 overflow-auto pt-14 pb-24 md:pt-0 md:pb-0 px-4 md:px-6 py-4 md:py-6">
+
+      <!-- Header pagina -->
+      <div class="mb-6 mt-2 md:mt-0">
+        <h1 class="section-title text-xl md:text-2xl">Dashboard</h1>
+        <p class="text-primary/50 text-sm mt-1">
+          Bentornata, <span class="font-semibold text-primary">{{ authStore.admin?.name }}</span>
+        </p>
       </div>
 
       <StatsOverview :appointments="appointments" class="mb-8" />
 
+      <!-- Appuntamenti di oggi -->
       <div>
-        <h2 class="font-semibold text-secondary mb-4">
-          Appuntamenti di oggi — <span class="text-primary capitalize">{{ formatDate(todayStr) }}</span>
-        </h2>
-
-        <div v-if="loading" class="text-gray-400 text-sm">Caricamento...</div>
-        <div v-else-if="!todayAppointments.length" class="card p-8 text-center text-gray-400">
-          Nessun appuntamento oggi.
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-semibold text-secondary text-sm">
+            Appuntamenti di oggi
+          </h2>
+          <span class="badge capitalize">{{ formatDate(todayStr) }}</span>
         </div>
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+
+        <!-- Loading shimmer -->
+        <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 stagger">
+          <div v-for="i in 3" :key="i" class="shimmer h-32 animate-fade-in-up"></div>
+        </div>
+
+        <div v-else-if="!todayAppointments.length" class="card p-8 text-center">
+          <div class="text-4xl mb-3">☀️</div>
+          <p class="font-medium text-secondary">Nessun appuntamento oggi</p>
+          <p class="text-xs text-primary/40 mt-1">Goditi la giornata!</p>
+        </div>
+
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
           <AppointmentCard
             v-for="appt in todayAppointments"
             :key="appt.id"

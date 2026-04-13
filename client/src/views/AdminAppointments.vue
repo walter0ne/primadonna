@@ -10,12 +10,9 @@ const { get, loading } = useApi()
 const appointments = ref([])
 const viewMode = ref('list') // 'list' | 'calendar'
 
-// Filters
-const filterDate = ref('')
+const filterDate   = ref('')
 const filterStatus = ref('')
-
-// Calendar week
-const weekStart = ref(getMonday(new Date()))
+const weekStart    = ref(getMonday(new Date()))
 
 function getMonday(date) {
   const d = new Date(date)
@@ -27,7 +24,7 @@ function getMonday(date) {
 
 async function load() {
   const params = {}
-  if (filterDate.value) params.date = filterDate.value
+  if (filterDate.value)   params.date   = filterDate.value
   if (filterStatus.value) params.status = filterStatus.value
   appointments.value = await get('/appointments', params).catch(() => [])
 }
@@ -54,33 +51,65 @@ function nextWeek() {
 </script>
 
 <template>
-  <div class="flex min-h-screen">
+  <div class="flex min-h-screen min-h-dvh bg-background">
     <AppSidebar />
 
-    <main class="flex-1 p-6 bg-background overflow-auto">
-      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 class="section-title">Appuntamenti</h1>
-        <div class="flex gap-2">
-          <button @click="viewMode = 'list'" class="text-sm px-3 py-2 rounded-lg border transition-colors" :class="viewMode === 'list' ? 'bg-secondary text-white border-secondary' : 'border-gray-200 text-gray-600'">Lista</button>
-          <button @click="viewMode = 'calendar'" class="text-sm px-3 py-2 rounded-lg border transition-colors" :class="viewMode === 'calendar' ? 'bg-secondary text-white border-secondary' : 'border-gray-200 text-gray-600'">Calendario</button>
+    <main class="flex-1 overflow-auto pt-14 pb-24 md:pt-0 md:pb-0 px-4 md:px-6 py-4 md:py-6">
+
+      <!-- Header + toggle vista -->
+      <div class="flex items-center justify-between mb-5 mt-2 md:mt-0 gap-3">
+        <h1 class="section-title text-xl md:text-2xl">Appuntamenti</h1>
+
+        <!-- Toggle lista/calendario — pill switcher -->
+        <div class="flex bg-beige rounded-2xl p-1 border border-accent-warm">
+          <button
+            @click="viewMode = 'list'"
+            class="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all"
+            :class="viewMode === 'list' ? 'bg-primary text-beige-light shadow-soft' : 'text-primary/50 hover:text-primary'"
+          >
+            Lista
+          </button>
+          <button
+            @click="viewMode = 'calendar'"
+            class="text-xs font-semibold px-3 py-1.5 rounded-xl transition-all"
+            :class="viewMode === 'calendar' ? 'bg-primary text-beige-light shadow-soft' : 'text-primary/50 hover:text-primary'"
+          >
+            Calendario
+          </button>
         </div>
       </div>
 
-      <!-- Filters -->
-      <div class="card p-4 mb-6 flex flex-wrap gap-3">
-        <input type="date" v-model="filterDate" @change="load" class="input-field w-auto text-sm" />
-        <select v-model="filterStatus" @change="load" class="input-field w-auto text-sm">
+      <!-- Filtri — scrollabili orizzontalmente su mobile -->
+      <div class="card p-3 mb-5 flex flex-wrap gap-2">
+        <input
+          type="date"
+          v-model="filterDate"
+          @change="load"
+          class="input-field flex-1 min-w-[140px] text-sm"
+          style="min-height:44px"
+        />
+        <select
+          v-model="filterStatus"
+          @change="load"
+          class="input-field flex-1 min-w-[140px] text-sm"
+          style="min-height:44px"
+        >
           <option value="">Tutti gli stati</option>
           <option value="CONFIRMED">Confermato</option>
           <option value="COMPLETED">Completato</option>
           <option value="CANCELLED">Cancellato</option>
           <option value="NO_SHOW">Non presentato</option>
         </select>
-        <button @click="filterDate = ''; filterStatus = ''; load()" class="btn-ghost text-sm">Reset filtri</button>
+        <button
+          @click="filterDate = ''; filterStatus = ''; load()"
+          class="btn-ghost text-xs px-3 whitespace-nowrap"
+        >
+          Reset
+        </button>
       </div>
 
-      <!-- Calendar view -->
-      <div v-if="viewMode === 'calendar'" class="card p-4 mb-6">
+      <!-- Calendario -->
+      <div v-if="viewMode === 'calendar'" class="card p-3 mb-5 overflow-x-auto">
         <CalendarView
           :appointments="filteredAppointments"
           :week-start="weekStart"
@@ -89,7 +118,7 @@ function nextWeek() {
         />
       </div>
 
-      <!-- List view -->
+      <!-- Lista -->
       <AppointmentList
         v-else
         :appointments="filteredAppointments"

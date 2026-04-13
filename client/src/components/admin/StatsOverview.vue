@@ -30,20 +30,30 @@ const revenue = computed(() =>
 )
 
 const stats = computed(() => [
-  { label: 'Oggi', value: todayAppts.value.length, icon: '📅', sub: 'appuntamenti' },
-  { label: 'Questa settimana', value: weekAppts.value.length, icon: '📆', sub: 'appuntamenti' },
-  { label: 'Questo mese', value: monthAppts.value.length, icon: '🗓', sub: 'appuntamenti' },
-  { label: 'Ricavo stimato', value: formatPrice(revenue.value), icon: '💰', sub: 'questo mese' },
+  { label: 'Oggi',             value: todayAppts.value.length,    icon: '📅', sub: 'appuntamenti', highlight: false },
+  { label: 'Questa settimana', value: weekAppts.value.length,     icon: '📆', sub: 'appuntamenti', highlight: false },
+  { label: 'Questo mese',      value: monthAppts.value.length,    icon: '🗓', sub: 'appuntamenti', highlight: false },
+  { label: 'Ricavo stimato',   value: formatPrice(revenue.value), icon: '💰', sub: 'questo mese',  highlight: true  },
 ])
 </script>
 
 <template>
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-    <div v-for="stat in stats" :key="stat.label" class="card p-5">
-      <div class="text-2xl mb-2">{{ stat.icon }}</div>
-      <div class="text-2xl font-bold text-secondary">{{ stat.value }}</div>
-      <div class="text-xs text-gray-500 mt-1">{{ stat.sub }}</div>
-      <div class="text-sm font-medium text-gray-700 mt-1">{{ stat.label }}</div>
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div
+      v-for="stat in stats"
+      :key="stat.label"
+      class="card p-4 flex flex-col gap-1 transition-all hover:shadow-strong hover:-translate-y-0.5"
+      :class="stat.highlight ? 'bg-gradient-to-br from-accent/40 to-beige border-accent-warm' : ''"
+    >
+      <span class="text-2xl">{{ stat.icon }}</span>
+      <span
+        class="text-2xl font-bold leading-none"
+        :class="stat.highlight ? 'text-primary' : 'text-secondary'"
+      >
+        {{ stat.value }}
+      </span>
+      <span class="text-xs text-primary/40">{{ stat.sub }}</span>
+      <span class="text-xs font-semibold text-secondary/60 mt-0.5">{{ stat.label }}</span>
     </div>
   </div>
 </template>
