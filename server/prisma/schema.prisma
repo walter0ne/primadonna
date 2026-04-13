@@ -15,6 +15,17 @@ model Admin {
   createdAt DateTime @default(now())
 }
 
+model Customer {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  password     String
+  name         String
+  phone        String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  appointments Appointment[]
+}
+
 model Service {
   id           String        @id @default(cuid())
   name         String
@@ -40,12 +51,16 @@ model Appointment {
   status        AppointmentStatus @default(CONFIRMED)
   service       Service           @relation(fields: [serviceId], references: [id])
   serviceId     String
+  // Cliente registrato (opzionale: funziona anche senza account)
+  customer      Customer?         @relation(fields: [customerId], references: [id])
+  customerId    String?
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
 
   @@index([date, startTime])
   @@index([status])
   @@index([customerEmail])
+  @@index([customerId])
 }
 
 enum AppointmentStatus {

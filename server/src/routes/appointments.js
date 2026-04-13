@@ -1,7 +1,8 @@
 const express = require('express');
 const { body, param, query } = require('express-validator');
 const { PrismaClient } = require('@prisma/client');
-const authMiddleware = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
+const { authMiddleware } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { getAvailableSlots, timeToMinutes, minutesToTime } = require('../services/slotService');
 const { sendBookingConfirmation } = require('../services/emailService');
@@ -39,6 +40,16 @@ router.post(
       const endMinutes = timeToMinutes(startTime) + service.duration;
       const endTime = minutesToTime(endMinutes);
 
+      // Se il cliente è loggato, collega la prenotazione al suo account
+      let customerId = null;
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        try {
+          const decoded = jwt.verify(authHeader.split(' ')[1], process.env.JWT_SECRET);
+          if (decoded.role === 'customer') customerId = decoded.id;
+        } catch { /* token non valido o scaduto: prenotazione anonima */ }
+      }
+
       const appointment = await prisma.appointment.create({
         data: {
           customerName,
@@ -50,6 +61,7 @@ router.post(
           endTime,
           notes,
           status: 'CONFIRMED',
+          ...(customerId ? { customerId } : {}),
         },
         include: { service: true },
       });

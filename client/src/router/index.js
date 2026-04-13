@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '../stores/auth.js'
+import { useCustomerStore } from '../stores/customer.js'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -20,7 +21,24 @@ const router = createRouter({
       meta: { requiresBooking: true },
     },
 
-    // ── Auth ───────────────────────────────────────────────────────────────
+    // ── Area Cliente ───────────────────────────────────────────────────────
+    {
+      path: '/area-cliente/login',
+      component: () => import('../views/CustomerLoginView.vue'),
+      meta: { requiresCustomerGuest: true },
+    },
+    {
+      path: '/area-cliente/registrati',
+      component: () => import('../views/CustomerRegisterView.vue'),
+      meta: { requiresCustomerGuest: true },
+    },
+    {
+      path: '/area-cliente',
+      component: () => import('../views/CustomerDashboardView.vue'),
+      meta: { requiresCustomerAuth: true },
+    },
+
+    // ── Auth admin ─────────────────────────────────────────────────────────
     {
       // Già loggato → redirect a /admin
       path: '/admin/login',
@@ -59,9 +77,10 @@ const router = createRouter({
 
 // ── Guard globale ──────────────────────────────────────────────────────────
 router.beforeEach((to, from) => {
-  const authStore = useAuthStore()
+  const authStore     = useAuthStore()
+  const customerStore = useCustomerStore()
 
-  // 1. Rotta protetta → non autenticato → login (con redirect di ritorno)
+  // 1. Rotta admin protetta → non autenticato → login admin
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     return {
       path: '/admin/login',
@@ -69,12 +88,25 @@ router.beforeEach((to, from) => {
     }
   }
 
-  // 2. Pagina login → già autenticato → dashboard
+  // 2. Pagina login admin → già autenticato → dashboard admin
   if (to.meta.requiresGuest && authStore.isAuthenticated) {
     return { path: '/admin' }
   }
 
-  // 3. Pagina successo prenotazione → accesso diretto (URL digitato) → home
+  // 3. Area cliente protetta → non autenticato → login cliente
+  if (to.meta.requiresCustomerAuth && !customerStore.isAuthenticated) {
+    return {
+      path: '/area-cliente/login',
+      query: { redirect: to.fullPath },
+    }
+  }
+
+  // 4. Login/register cliente → già loggato → dashboard cliente
+  if (to.meta.requiresCustomerGuest && customerStore.isAuthenticated) {
+    return { path: '/area-cliente' }
+  }
+
+  // 5. Pagina successo prenotazione → accesso diretto (URL digitato) → home
   //    Legittima solo se si arriva dal flusso di prenotazione
   if (to.meta.requiresBooking) {
     const validSources = ['/prenota', '/prenotazione-confermata']

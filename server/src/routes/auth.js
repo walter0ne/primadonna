@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
-const authMiddleware = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 
 const router = express.Router();
@@ -32,7 +32,7 @@ router.post(
       }
 
       const token = jwt.sign(
-        { id: admin.id, email: admin.email, name: admin.name },
+        { id: admin.id, email: admin.email, name: admin.name, role: 'admin' },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
       );
