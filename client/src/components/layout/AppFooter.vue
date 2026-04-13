@@ -19,10 +19,15 @@
 
       <!-- Info -->
       <div class="text-center text-sm text-accent-warm/60 space-y-2">
-        <p class="flex items-center justify-center gap-2">
+        <a
+          href="https://www.google.com/maps/search/?api=1&query=Corso+Campano+47+Giugliano+in+Campania+NA"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center justify-center gap-2 hover:text-accent transition-colors"
+        >
           <span>📍</span>
           <span>Corso Campano, 47 — 80014 Giugliano in Campania (NA)</span>
-        </p>
+        </a>
         <p class="flex items-center justify-center gap-2">
           <span>📞</span>
           <a href="tel:+393489135964" class="hover:text-accent transition-colors">+39 348 913 5964</a>
