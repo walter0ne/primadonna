@@ -15,61 +15,158 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col min-h-screen">
+  <div class="flex flex-col min-h-screen min-h-dvh bg-background">
     <AppHeader />
 
-    <!-- Hero -->
-    <section class="bg-secondary text-white py-20 px-4 text-center">
-      <h1 class="font-serif text-4xl md:text-6xl text-primary font-bold mb-4 tracking-wide">PRIMADONNA</h1>
-      <p class="text-accent text-lg md:text-xl mb-2 font-light">Il tuo salone di bellezza</p>
-      <p class="text-gray-400 mb-8 max-w-md mx-auto text-sm">Prenota il tuo appuntamento online in pochi click. Nessuna attesa al telefono.</p>
-      <RouterLink to="/prenota" class="btn-primary text-base px-8 py-4 inline-block">
-        Prenota il tuo appuntamento
-      </RouterLink>
+    <!-- ── HERO ───────────────────────────────────────────── -->
+    <section class="relative overflow-hidden bg-secondary text-beige-light">
+
+      <!-- Sfondo decorativo -->
+      <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-primary/20 blur-3xl"></div>
+        <div class="absolute bottom-0 -left-16 w-64 h-64 rounded-full bg-primary-dark/30 blur-3xl"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-primary/5 blur-3xl"></div>
+      </div>
+
+      <div class="relative max-w-5xl mx-auto px-4 pt-16 pb-20 text-center">
+
+        <!-- Pill badge -->
+        <div class="inline-flex items-center gap-2 bg-primary/20 border border-primary/30 text-accent text-xs font-semibold px-4 py-1.5 rounded-full mb-6 animate-fade-in-up">
+          <span class="w-1.5 h-1.5 rounded-full bg-primary-light inline-block"></span>
+          Prenotazione online 24/7
+        </div>
+
+        <!-- Titolo -->
+        <h1 class="hero-title text-beige-light mb-4 animate-fade-in-up" style="animation-delay:0.1s">
+          PRIMA<span class="text-primary-light">DONNA</span>
+        </h1>
+
+        <!-- Sottotitolo -->
+        <p class="text-accent-warm/80 text-lg md:text-xl font-light mb-3 animate-fade-in-up" style="animation-delay:0.2s">
+          Il tuo salone di bellezza
+        </p>
+        <p class="text-accent/50 text-sm max-w-xs md:max-w-sm mx-auto mb-10 animate-fade-in-up" style="animation-delay:0.25s">
+          Prenota il tuo appuntamento in pochi tap, senza attese al telefono.
+        </p>
+
+        <!-- CTA -->
+        <div class="animate-fade-in-up" style="animation-delay:0.35s">
+          <RouterLink to="/prenota" class="btn-primary text-base px-10 py-4 min-h-[56px] shadow-strong">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            Prenota il tuo appuntamento
+          </RouterLink>
+        </div>
+
+        <!-- Trust indicators -->
+        <div class="flex items-center justify-center gap-6 mt-10 text-accent/40 text-xs animate-fade-in-up" style="animation-delay:0.45s">
+          <span>✨ Nessun anticipo</span>
+          <span class="w-1 h-1 rounded-full bg-accent/30"></span>
+          <span>📱 Solo 1 minuto</span>
+          <span class="w-1 h-1 rounded-full bg-accent/30"></span>
+          <span>🔒 Dati al sicuro</span>
+        </div>
+      </div>
+
+      <!-- Onda decorativa bottom -->
+      <div class="absolute bottom-0 left-0 right-0 h-12 bg-background" style="clip-path: ellipse(55% 100% at 50% 100%)"></div>
     </section>
 
-    <!-- Servizi -->
-    <section class="py-16 px-4 max-w-6xl mx-auto w-full">
-      <h2 class="section-title text-center mb-2">I nostri servizi</h2>
-      <p class="text-center text-gray-500 mb-10 text-sm">Scegli tra i nostri servizi professionali</p>
+    <!-- ── SERVIZI ─────────────────────────────────────────── -->
+    <section class="py-16 px-4 max-w-5xl mx-auto w-full">
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div v-for="service in services" :key="service.id" class="card p-5">
-          <h3 class="font-semibold text-secondary mb-1">{{ service.name }}</h3>
-          <p v-if="service.description" class="text-gray-500 text-sm mb-3">{{ service.description }}</p>
-          <div class="flex items-center justify-between mt-auto">
-            <span class="text-xs text-gray-400">⏱ {{ formatDuration(service.duration) }}</span>
-            <span class="font-bold text-primary">{{ formatPrice(service.price) }}</span>
+      <div class="text-center mb-10">
+        <h2 class="section-title mb-2">I nostri servizi</h2>
+        <div class="divider mt-3 mb-4"></div>
+        <p class="text-primary/60 text-sm">Professionalità e cura in ogni trattamento</p>
+      </div>
+
+      <!-- Loading shimmer -->
+      <div v-if="!services.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger">
+        <div v-for="i in 4" :key="i" class="shimmer h-36 animate-fade-in-up"></div>
+      </div>
+
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger">
+        <div
+          v-for="service in services"
+          :key="service.id"
+          class="card p-5 flex flex-col gap-3 animate-fade-in-up group hover:shadow-strong hover:-translate-y-1 transition-all duration-300"
+        >
+          <!-- Nome + prezzo -->
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="font-semibold text-secondary text-base leading-snug group-hover:text-primary transition-colors">
+              {{ service.name }}
+            </h3>
+            <span class="text-primary font-bold text-sm shrink-0">{{ formatPrice(service.price) }}</span>
+          </div>
+
+          <!-- Descrizione -->
+          <p v-if="service.description" class="text-primary/50 text-xs leading-relaxed flex-1">
+            {{ service.description }}
+          </p>
+
+          <!-- Durata badge -->
+          <div class="flex items-center gap-1.5">
+            <span class="badge">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              {{ formatDuration(service.duration) }}
+            </span>
           </div>
         </div>
       </div>
 
       <div class="text-center mt-10">
-        <RouterLink to="/prenota" class="btn-primary inline-block">Prenota Ora</RouterLink>
+        <RouterLink to="/prenota" class="btn-primary inline-flex">
+          Prenota Ora
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+          </svg>
+        </RouterLink>
       </div>
     </section>
 
-    <!-- Perché sceglierci -->
-    <section class="bg-secondary py-16 px-4">
+    <!-- ── PERCHÉ SCEGLIERCI ───────────────────────────────── -->
+    <section class="section-warm py-16 px-4">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="font-serif text-primary text-3xl font-bold mb-10 tracking-wide">Perché sceglierci</h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div class="text-accent">
-            <div class="text-4xl mb-3">✂️</div>
-            <h3 class="font-semibold text-primary mb-2">Professionalità</h3>
-            <p class="text-sm opacity-70">Stilisti esperti e appassionati al tuo servizio</p>
+
+        <h2 class="font-serif text-3xl font-bold mb-2 text-accent">Perché sceglierci</h2>
+        <div class="divider mt-3 mb-10"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 stagger">
+
+          <div class="card-hover p-6 text-center bg-white/5 border-accent/10 shadow-none hover:bg-white/8 hover:shadow-none">
+            <div class="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4 text-2xl">✂️</div>
+            <h3 class="font-semibold text-accent mb-2">Professionalità</h3>
+            <p class="text-sm text-accent/50 leading-relaxed">Stilisti esperti e appassionati al tuo servizio ogni giorno</p>
           </div>
-          <div class="text-accent">
-            <div class="text-4xl mb-3">📱</div>
-            <h3 class="font-semibold text-primary mb-2">Prenotazione Online</h3>
-            <p class="text-sm opacity-70">Prenota 24/7 dal tuo smartphone, senza telefonate</p>
+
+          <div class="card-hover p-6 text-center bg-white/5 border-accent/10 shadow-none hover:bg-white/8 hover:shadow-none">
+            <div class="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4 text-2xl">📱</div>
+            <h3 class="font-semibold text-accent mb-2">Prenotazione Online</h3>
+            <p class="text-sm text-accent/50 leading-relaxed">Prenota 24/7 dal tuo smartphone, senza attese al telefono</p>
           </div>
-          <div class="text-accent">
-            <div class="text-4xl mb-3">⭐</div>
-            <h3 class="font-semibold text-primary mb-2">Qualità Garantita</h3>
-            <p class="text-sm opacity-70">Prodotti di alta qualità per risultati eccellenti</p>
+
+          <div class="card-hover p-6 text-center bg-white/5 border-accent/10 shadow-none hover:bg-white/8 hover:shadow-none">
+            <div class="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4 text-2xl">⭐</div>
+            <h3 class="font-semibold text-accent mb-2">Qualità Garantita</h3>
+            <p class="text-sm text-accent/50 leading-relaxed">Prodotti di alta qualità per risultati eccellenti e duraturi</p>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ── CALL TO ACTION FINALE ───────────────────────────── -->
+    <section class="py-16 px-4 text-center bg-background">
+      <div class="max-w-sm mx-auto">
+        <p class="text-xs font-semibold text-primary/40 tracking-widest uppercase mb-3">Inizia oggi</p>
+        <h2 class="font-serif text-2xl font-bold text-secondary mb-3">Pronta a coccolarti?</h2>
+        <p class="text-primary/50 text-sm mb-8">Il tuo prossimo appuntamento è a un tap di distanza.</p>
+        <RouterLink to="/prenota" class="btn-primary w-full justify-center">
+          Prenota il tuo momento
+        </RouterLink>
       </div>
     </section>
 

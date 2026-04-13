@@ -4,23 +4,23 @@ import { useApi } from '../../composables/useApi.js'
 
 const props = defineProps({
   serviceId: String,
-  date: String,
+  date:      String,
   modelValue: String,
 })
 const emit = defineEmits(['update:modelValue'])
 
 const { get, loading } = useApi()
-const slots = ref([])
+const slots  = ref([])
 const noSlots = ref(false)
 
 watch(
   () => [props.date, props.serviceId],
   async ([date, serviceId]) => {
     if (!date || !serviceId) return
-    slots.value = []
+    slots.value  = []
     noSlots.value = false
     const res = await get(`/availability/${date}`, { serviceId })
-    slots.value = res.slots || []
+    slots.value  = res.slots || []
     noSlots.value = slots.value.length === 0
   },
   { immediate: true }
@@ -29,19 +29,28 @@ watch(
 
 <template>
   <div>
-    <div v-if="loading" class="text-center py-8 text-gray-400 text-sm">Caricamento orari...</div>
-    <div v-else-if="noSlots" class="text-center py-8 text-gray-400 text-sm">
-      Nessun orario disponibile per questa data.
+    <!-- Loading shimmer -->
+    <div v-if="loading" class="grid grid-cols-3 gap-2 stagger">
+      <div v-for="i in 6" :key="i" class="shimmer h-12 animate-fade-in-up"></div>
     </div>
-    <div v-else class="grid grid-cols-3 sm:grid-cols-4 gap-2">
+
+    <!-- Nessun orario -->
+    <div v-else-if="noSlots" class="card p-6 text-center">
+      <div class="text-3xl mb-3">😔</div>
+      <p class="text-sm font-medium text-secondary">Nessun orario disponibile</p>
+      <p class="text-xs text-primary/40 mt-1">Prova con un'altra data</p>
+    </div>
+
+    <!-- Slot grid -->
+    <div v-else class="grid grid-cols-3 gap-2 stagger">
       <button
         v-for="slot in slots"
         :key="slot"
         @click="emit('update:modelValue', slot)"
-        class="py-3 rounded-lg text-sm font-medium border transition-all min-h-[44px]"
+        class="py-3 rounded-2xl text-sm font-semibold border-2 transition-all duration-150 min-h-[52px] active:scale-95 animate-fade-in-up"
         :class="modelValue === slot
-          ? 'bg-primary text-white border-primary shadow-md'
-          : 'bg-white border-gray-200 text-secondary hover:border-primary hover:text-primary'"
+          ? 'bg-primary text-beige-light border-primary shadow-btn scale-105'
+          : 'bg-beige-light border-accent-warm text-secondary/70 hover:border-primary/50 hover:text-primary hover:bg-accent/40'"
       >
         {{ slot }}
       </button>

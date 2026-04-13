@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Google Fonts ──────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
 @layer base {
   * {
     box-sizing: border-box;
@@ -13,43 +16,188 @@
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Mobile-first: prevent zoom on input focus */
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    background-color: #FAFAF8;
-    color: #2D2D2D;
+    background-color: #F5ECD8;
+    color: #2D1A0E;
     min-height: 100vh;
+    min-height: 100dvh;
+    overscroll-behavior-y: none;
   }
 
   #app {
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
   }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: #F5ECD8; }
+  ::-webkit-scrollbar-thumb { background: #D4B896; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #A8703E; }
 }
 
 @layer components {
+
+  /* ── Bottoni ──────────────────────────────────────────── */
   .btn-primary {
-    @apply bg-primary text-white font-semibold px-6 py-3 rounded-lg hover:bg-primary-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px];
+    @apply inline-flex items-center justify-center gap-2
+           bg-primary text-beige-light font-semibold
+           px-6 py-3.5 rounded-2xl
+           shadow-btn
+           hover:bg-primary-dark active:scale-95
+           transition-all duration-200
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none
+           min-h-[52px] text-sm tracking-wide;
   }
 
   .btn-secondary {
-    @apply bg-white text-secondary border border-secondary font-semibold px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors duration-200 min-h-[44px];
+    @apply inline-flex items-center justify-center gap-2
+           bg-beige-light text-primary font-semibold
+           border-2 border-primary/30
+           px-6 py-3.5 rounded-2xl
+           hover:bg-accent hover:border-primary/60 active:scale-95
+           transition-all duration-200
+           min-h-[52px] text-sm tracking-wide;
   }
 
   .btn-ghost {
-    @apply text-primary font-medium px-4 py-2 rounded-lg hover:bg-accent transition-colors duration-200;
+    @apply inline-flex items-center justify-center gap-2
+           text-primary font-medium
+           px-4 py-2.5 rounded-xl
+           hover:bg-accent/50 active:scale-95
+           transition-all duration-200;
   }
 
-  .input-field {
-    @apply w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors;
-  }
-
+  /* ── Card ─────────────────────────────────────────────── */
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100;
+    @apply bg-beige-light rounded-3xl shadow-card border border-accent/60;
   }
 
-  .section-title {
-    @apply font-serif text-secondary text-2xl md:text-3xl font-bold;
+  .card-hover {
+    @apply card hover:shadow-strong hover:-translate-y-0.5 active:scale-98 transition-all duration-200 cursor-pointer;
   }
+
+  /* ── Input ────────────────────────────────────────────── */
+  .input-field {
+    @apply w-full bg-beige-light border-2 border-accent-warm rounded-2xl
+           px-4 py-3.5 text-sm text-secondary
+           placeholder-primary/30
+           focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10
+           transition-all duration-200 min-h-[52px];
+  }
+
+  /* ── Titoli ───────────────────────────────────────────── */
+  .section-title {
+    @apply font-serif text-secondary text-2xl md:text-3xl font-bold tracking-wide;
+  }
+
+  .hero-title {
+    @apply font-serif text-5xl md:text-7xl font-bold tracking-widest leading-none;
+  }
+
+  /* ── Badge ────────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1
+           text-xs font-semibold
+           bg-accent text-primary
+           px-3 py-1 rounded-full;
+  }
+
+  /* ── Chip selezionabile ───────────────────────────────── */
+  .chip {
+    @apply inline-flex items-center justify-center
+           bg-beige text-primary/70 font-medium text-sm
+           px-4 py-2 rounded-full border border-accent-warm
+           hover:bg-accent hover:text-primary hover:border-primary/40
+           active:scale-95 transition-all duration-150 cursor-pointer;
+  }
+
+  .chip-active {
+    @apply bg-primary text-beige-light border-primary shadow-btn;
+  }
+
+  /* ── Divider decorativo ───────────────────────────────── */
+  .divider {
+    @apply w-12 h-0.5 bg-primary/30 rounded-full mx-auto;
+  }
+
+  /* ── App bottom nav ───────────────────────────────────── */
+  .bottom-nav {
+    @apply fixed bottom-0 left-0 right-0 z-50
+           bg-beige-light/95 backdrop-blur-xl
+           border-t border-accent/80
+           flex items-center justify-around
+           px-2 pb-safe pt-3
+           md:hidden;
+  }
+
+  /* ── Sezione con sfondo alternato ─────────────────────── */
+  .section-warm {
+    @apply bg-gradient-to-br from-secondary to-secondary-light text-beige-light;
+  }
+
+  /* ── Shimmer loading ──────────────────────────────────── */
+  .shimmer {
+    @apply animate-pulse bg-accent/60 rounded-2xl;
+  }
+}
+
+/* ── Animazioni ─────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.45s ease both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease both;
+}
+
+/* Stagger children */
+.stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger > *:nth-child(2) { animation-delay: 0.10s; }
+.stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger > *:nth-child(4) { animation-delay: 0.20s; }
+.stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger > *:nth-child(6) { animation-delay: 0.30s; }
+
+/* ── Safe area per iPhone ───────────────────────────────── */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* ── Active scale ────────────────────────────────────────── */
+.active\:scale-98:active {
+  transform: scale(0.98);
+}
+
+/* ── Glass effect ────────────────────────────────────────── */
+.glass {
+  background: rgba(251, 247, 241, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }

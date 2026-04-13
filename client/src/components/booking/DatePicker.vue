@@ -7,31 +7,27 @@ const emit = defineEmits(['select'])
 const today = new Date()
 today.setHours(0, 0, 0, 0)
 
-const viewDate = ref(new Date(today))
+const viewDate    = ref(new Date(today))
 const selectedDate = ref(null)
 
-const DAYS = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
+const DAYS   = ['L', 'M', 'M', 'G', 'V', 'S', 'D']
 const MONTHS = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre']
 
 const monthLabel = computed(() => `${MONTHS[viewDate.value.getMonth()]} ${viewDate.value.getFullYear()}`)
 
 const calendarDays = computed(() => {
-  const year = viewDate.value.getFullYear()
+  const year  = viewDate.value.getFullYear()
   const month = viewDate.value.getMonth()
   const firstDay = new Date(year, month, 1)
-  const lastDay = new Date(year, month + 1, 0)
+  const lastDay  = new Date(year, month + 1, 0)
 
-  // Offset: lunedì = 0
   let startOffset = firstDay.getDay() - 1
   if (startOffset < 0) startOffset = 6
 
   const days = []
-  // Empty cells before
   for (let i = 0; i < startOffset; i++) days.push(null)
-  // Days of month
   for (let d = 1; d <= lastDay.getDate(); d++) {
-    const date = new Date(year, month, d)
-    days.push(date)
+    days.push(new Date(year, month, d))
   }
   return days
 })
@@ -67,42 +63,75 @@ function nextMonth() {
 </script>
 
 <template>
-  <div class="card p-4 w-full max-w-sm mx-auto">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-4">
-      <button @click="prevMonth" class="p-2 rounded-full hover:bg-gray-100 transition-colors" aria-label="Mese precedente">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+  <div class="card p-4 w-full">
+    <!-- Header mese -->
+    <div class="flex items-center justify-between mb-5">
+      <button
+        @click="prevMonth"
+        class="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-accent transition-colors active:scale-90 text-secondary/60 hover:text-primary"
+        aria-label="Mese precedente"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/>
+        </svg>
       </button>
-      <span class="font-semibold text-secondary capitalize">{{ monthLabel }}</span>
-      <button @click="nextMonth" class="p-2 rounded-full hover:bg-gray-100 transition-colors" aria-label="Mese successivo">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+
+      <span class="font-semibold text-secondary text-sm capitalize">{{ monthLabel }}</span>
+
+      <button
+        @click="nextMonth"
+        class="w-9 h-9 rounded-xl flex items-center justify-center hover:bg-accent transition-colors active:scale-90 text-secondary/60 hover:text-primary"
+        aria-label="Mese successivo"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+        </svg>
       </button>
     </div>
 
-    <!-- Day labels -->
+    <!-- Intestazioni giorni -->
     <div class="grid grid-cols-7 mb-2">
-      <div v-for="day in DAYS" :key="day" class="text-center text-xs font-medium text-gray-400 py-1">{{ day }}</div>
+      <div
+        v-for="day in DAYS"
+        :key="day"
+        class="text-center text-xs font-semibold text-primary/30 py-1"
+      >
+        {{ day }}
+      </div>
     </div>
 
-    <!-- Days grid -->
+    <!-- Griglia giorni -->
     <div class="grid grid-cols-7 gap-1">
       <div v-for="(date, i) in calendarDays" :key="i">
         <button
           v-if="date"
           :disabled="isDisabled(date)"
           @click="selectDay(date)"
-          class="w-full aspect-square rounded-full text-sm font-medium transition-colors flex items-center justify-center"
+          class="w-full aspect-square rounded-xl text-xs font-semibold transition-all duration-150 flex items-center justify-center active:scale-90"
           :class="[
-            isSelected(date) ? 'bg-primary text-white' :
-            isToday(date) ? 'border-2 border-primary text-primary' :
-            isDisabled(date) ? 'text-gray-300 cursor-not-allowed' :
-            'hover:bg-accent text-secondary'
+            isSelected(date)
+              ? 'bg-primary text-beige-light shadow-btn scale-105'
+              : isToday(date)
+                ? 'border-2 border-primary text-primary bg-accent/40'
+                : isDisabled(date)
+                  ? 'text-primary/20 cursor-not-allowed'
+                  : 'hover:bg-accent text-secondary hover:text-primary'
           ]"
         >
           {{ date.getDate() }}
         </button>
         <div v-else />
       </div>
+    </div>
+
+    <!-- Legenda -->
+    <div class="flex items-center gap-4 mt-4 pt-4 border-t border-accent/50 text-xs text-primary/40">
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded-sm bg-primary inline-block"></span> Selezionato
+      </span>
+      <span class="flex items-center gap-1.5">
+        <span class="w-3 h-3 rounded-sm border-2 border-primary inline-block"></span> Oggi
+      </span>
     </div>
   </div>
 </template>
