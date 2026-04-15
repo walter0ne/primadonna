@@ -139,11 +139,55 @@ async function sendBookingConfirmation(appointment, service) {
   `;
 
   await resend.emails.send({
-    from:    process.env.RESEND_FROM_EMAIL || 'prenotazioni@primadonna.it',
+    from:    process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
     to:      appointment.customerEmail,
     subject: `Confermato: ${service.name} — ${dateStr}`,
     html:    baseLayout(content),
   }).catch(err => console.error('Email booking confirmation failed:', err.message));
+}
+
+// ── Notifica admin: nuova prenotazione ────────────────────────────────────────
+async function sendAdminBookingNotification(appointment, service) {
+  const notifyEmail = process.env.RESEND_NOTIFY_EMAIL;
+  if (!notifyEmail) return; // variabile non impostata → skip silenzioso
+
+  const dateStr = capitalize(formatDate(appointment.date));
+
+  const html = `<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"><style>
+  body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+  .card { background: #fff; max-width: 480px; margin: 0 auto; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+  h2 { color: #8B5A2B; margin: 0 0 20px; font-size: 18px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  td { padding: 9px 0; border-bottom: 1px solid #f0e8dc; color: #333; }
+  td:first-child { color: #9E7A5A; width: 110px; }
+  td:last-child { font-weight: 600; }
+  .total td:last-child { color: #8B5A2B; font-size: 16px; }
+</style></head>
+<body>
+  <div class="card">
+    <h2>🗓 Nuova prenotazione</h2>
+    <table>
+      <tr><td>Cliente</td><td>${appointment.customerName}</td></tr>
+      <tr><td>Email</td><td>${appointment.customerEmail}</td></tr>
+      <tr><td>Telefono</td><td>${appointment.customerPhone}</td></tr>
+      <tr><td>Servizio</td><td>${service.name}</td></tr>
+      <tr><td>Data</td><td>${dateStr}</td></tr>
+      <tr><td>Orario</td><td>${appointment.startTime} – ${appointment.endTime}</td></tr>
+      ${appointment.notes ? `<tr><td>Note</td><td>${appointment.notes}</td></tr>` : ''}
+      <tr class="total"><td>Totale</td><td>€${Number(service.price).toFixed(2)}</td></tr>
+    </table>
+  </div>
+</body>
+</html>`;
+
+  await resend.emails.send({
+    from:    process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+    to:      notifyEmail,
+    subject: `📅 Nuova prenotazione: ${appointment.customerName} — ${service.name} ${dateStr}`,
+    html,
+  }).catch(err => console.error('Admin notification email failed:', err.message));
 }
 
 // ── Email di benvenuto alla registrazione ─────────────────────────────────────
@@ -168,11 +212,11 @@ async function sendWelcomeEmail(customer) {
   `;
 
   await resend.emails.send({
-    from:    process.env.RESEND_FROM_EMAIL || 'prenotazioni@primadonna.it',
+    from:    process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
     to:      customer.email,
     subject: `Benvenuta in ${SALON_NAME}!`,
     html:    baseLayout(content),
   }).catch(err => console.error('Welcome email failed:', err.message));
 }
 
-module.exports = { sendBookingConfirmation, sendWelcomeEmail };
+module.exports = { sendBookingConfirmation, sendWelcomeEmail, sendAdminBookingNotification };

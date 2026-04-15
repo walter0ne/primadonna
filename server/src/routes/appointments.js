@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const { authMiddleware } = require('../middleware/auth');
 const validate = require('../middleware/validate');
 const { getAvailableSlots, timeToMinutes, minutesToTime } = require('../services/slotService');
-const { sendBookingConfirmation } = require('../services/emailService');
+const { sendBookingConfirmation, sendAdminBookingNotification } = require('../services/emailService');
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -66,8 +66,11 @@ router.post(
         include: { service: true },
       });
 
-      // Invia email di conferma (non-blocking)
+      // Invia email di conferma al cliente (non-blocking)
       sendBookingConfirmation(appointment, appointment.service).catch(console.error);
+
+      // Invia notifica nuova prenotazione all'admin (non-blocking)
+      sendAdminBookingNotification(appointment, appointment.service).catch(console.error);
 
       res.status(201).json(appointment);
     } catch (err) {
