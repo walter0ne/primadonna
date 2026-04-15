@@ -108,6 +108,49 @@
             <p v-if="errors.password" class="mt-1 text-xs text-red-500">{{ errors.password }}</p>
           </div>
 
+          <!-- Privacy consent -->
+          <div>
+            <label class="flex items-start gap-3 cursor-pointer group">
+              <div class="relative mt-0.5 shrink-0">
+                <input
+                  v-model="form.privacyConsent"
+                  type="checkbox"
+                  class="peer sr-only"
+                  @change="clearError('privacyConsent')"
+                />
+                <div
+                  class="w-5 h-5 rounded-md border-2 transition-all flex items-center justify-center"
+                  :class="form.privacyConsent
+                    ? 'bg-[#8B5A2B] border-[#8B5A2B]'
+                    : errors.privacyConsent
+                      ? 'border-red-400 bg-white'
+                      : 'border-[#C8A882] bg-white group-hover:border-[#8B5A2B]'"
+                >
+                  <svg v-if="form.privacyConsent" xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                  </svg>
+                </div>
+              </div>
+              <span class="text-sm text-[#4A2C0E] leading-relaxed">
+                Ho letto e accetto la
+                <RouterLink to="/privacy-policy" target="_blank" class="text-[#8B5A2B] font-semibold hover:underline">
+                  Privacy Policy
+                </RouterLink>
+                e la
+                <RouterLink to="/cookie-policy" target="_blank" class="text-[#8B5A2B] font-semibold hover:underline">
+                  Cookie Policy
+                </RouterLink>.
+                Acconsento al trattamento dei miei dati personali per la gestione dell'account e delle prenotazioni. <span class="text-red-500">*</span>
+              </span>
+            </label>
+            <p v-if="errors.privacyConsent" class="mt-1.5 text-xs text-red-500 flex items-center gap-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
+              {{ errors.privacyConsent }}
+            </p>
+          </div>
+
           <!-- Global error -->
           <div v-if="globalError" class="p-3 rounded-xl bg-red-50 border border-red-200">
             <p class="text-sm text-red-600 text-center">{{ globalError }}</p>
@@ -163,7 +206,7 @@ import { useCustomerStore } from '@/stores/customer'
 const router = useRouter()
 const customerStore = useCustomerStore()
 
-const form = ref({ name: '', email: '', phone: '', password: '' })
+const form = ref({ name: '', email: '', phone: '', password: '', privacyConsent: false })
 const errors = ref({})
 const globalError = ref('')
 const loading = ref(false)
@@ -187,6 +230,9 @@ function validate() {
   if (!form.value.phone.trim()) e.phone = 'Telefono obbligatorio'
   if (!passwordRules.value.every(r => r.valid)) {
     e.password = 'La password non rispetta i requisiti'
+  }
+  if (!form.value.privacyConsent) {
+    e.privacyConsent = 'Devi accettare la Privacy Policy per continuare'
   }
   errors.value = e
   return Object.keys(e).length === 0

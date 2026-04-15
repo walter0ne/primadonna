@@ -1,3 +1,7 @@
+<script setup>
+import { RouterLink } from 'vue-router'
+</script>
+
 <template>
   <footer class="bg-secondary text-beige-light mt-auto">
     <div class="max-w-5xl mx-auto px-4 py-10">
@@ -33,6 +37,17 @@
           <a href="tel:+393489135964" class="hover:text-accent transition-colors">+39 348 913 5964</a>
         </p>
         <p class="text-xs mt-4 text-accent/30">© {{ new Date().getFullYear() }} Primadonna. Tutti i diritti riservati.</p>
+
+        <!-- Legal links -->
+        <div class="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-accent/10">
+          <RouterLink to="/privacy-policy" class="text-xs text-accent/40 hover:text-accent/70 transition-colors">
+            Privacy Policy
+          </RouterLink>
+          <span class="text-accent/20">·</span>
+          <RouterLink to="/cookie-policy" class="text-xs text-accent/40 hover:text-accent/70 transition-colors">
+            Cookie Policy
+          </RouterLink>
+        </div>
       </div>
     </div>
   </footer>

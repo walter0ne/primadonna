@@ -63,6 +63,16 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
 
+    // ── Legal ──────────────────────────────────────────────────────────────
+    {
+      path: '/privacy-policy',
+      component: () => import('../views/PrivacyPolicyView.vue'),
+    },
+    {
+      path: '/cookie-policy',
+      component: () => import('../views/CookiePolicyView.vue'),
+    },
+
     // ── Catch-all: qualsiasi URL sconosciuto → home ────────────────────────
     {
       path: '/:pathMatch(.*)*',
