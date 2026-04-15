@@ -26,6 +26,9 @@ const errorHandler       = require('./middleware/errorHandler');
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
+// ── Trust proxy (necessario su Render/Heroku/Vercel dietro reverse proxy) ─────
+app.set('trust proxy', 1);
+
 // ── Security headers ──────────────────────────────────────────────────────────
 app.use(helmet());
 
