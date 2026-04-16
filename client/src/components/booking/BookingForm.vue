@@ -29,12 +29,34 @@ const customerStore = useCustomerStore()
           </svg>
           <span>{{ customerStore.customer?.email }}</span>
         </div>
-        <div class="flex items-center gap-2">
+        <div v-if="customerStore.customer?.phone" class="flex items-center gap-2">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-[#A8703E] shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" />
           </svg>
           <span>{{ customerStore.customer?.phone }}</span>
         </div>
+      </div>
+    </div>
+
+    <!-- Telefono mancante (es. utenti Google): chiediamo solo quello -->
+    <div v-if="customerStore.isAuthenticated && !customerStore.customer?.phone" class="space-y-1.5">
+      <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">
+        Numero di telefono <span class="text-primary">*</span>
+      </label>
+      <p class="text-xs text-[#9E7A5A] -mt-1">Necessario per confermare la prenotazione</p>
+      <div class="relative">
+        <div class="absolute left-3.5 top-1/2 -translate-y-1/2 text-primary/30 pointer-events-none">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+          </svg>
+        </div>
+        <input
+          v-model="bookingStore.customerData.phone"
+          type="tel"
+          class="input-field pl-10"
+          placeholder="+39 333 1234567"
+          autocomplete="tel"
+        />
       </div>
     </div>
 

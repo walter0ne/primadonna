@@ -49,7 +49,10 @@ const stepIcons = [
 const canProceedStep2 = computed(() => bookingStore.selectedDate && bookingStore.selectedTime)
 const canProceedStep3 = computed(() => {
   const { name, phone, email } = bookingStore.customerData
-  return name.trim() && phone.trim() && email.trim() && /\S+@\S+\.\S+/.test(email)
+  if (!name.trim() || !email.trim() || !/\S+@\S+\.\S+/.test(email)) return false
+  // Il telefono è sempre obbligatorio (anche per utenti Google che non ce l'hanno ancora)
+  if (!phone.trim()) return false
+  return true
 })
 
 function onDateSelect(date) {
