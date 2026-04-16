@@ -34,17 +34,14 @@
       </div>
 
       <!-- New booking CTA -->
-      <RouterLink
-        to="/prenota"
-        class="btn-primary w-full flex items-center justify-center gap-2 mb-6"
-      >
+      <RouterLink to="/prenota" class="btn-primary w-full flex items-center justify-center gap-2 mb-6">
         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
         Prenota un servizio
       </RouterLink>
 
-      <!-- Loading state -->
+      <!-- Loading -->
       <div v-if="loading" class="space-y-3">
         <div v-for="i in 3" :key="i" class="card p-5 animate-pulse">
           <div class="flex justify-between items-start mb-3">
@@ -56,7 +53,7 @@
         </div>
       </div>
 
-      <!-- Error state -->
+      <!-- Error -->
       <div v-else-if="error" class="card p-6 text-center">
         <div class="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-3">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
@@ -67,11 +64,11 @@
         <button @click="loadAppointments" class="btn-secondary text-sm px-5 py-2">Riprova</button>
       </div>
 
-      <!-- Empty state -->
+      <!-- Empty -->
       <div v-else-if="appointments.length === 0" class="card p-8 text-center">
         <div class="w-16 h-16 rounded-2xl bg-[#F0E2CE] flex items-center justify-center mx-auto mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-[#A8703E]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 9v7.5" />
           </svg>
         </div>
         <p class="font-semibold text-[#2D1A0E] mb-1">Nessuna prenotazione</p>
@@ -81,9 +78,9 @@
         </RouterLink>
       </div>
 
-      <!-- Appointments list -->
+      <!-- List -->
       <div v-else class="space-y-3">
-        <!-- Upcoming section -->
+        <!-- Upcoming -->
         <div v-if="upcomingAppointments.length > 0">
           <h2 class="text-xs font-bold text-[#8B5A2B] uppercase tracking-widest mb-3 px-1">
             Prossimi appuntamenti
@@ -93,12 +90,14 @@
               v-for="apt in upcomingAppointments"
               :key="apt.id"
               :appointment="apt"
+              :can-edit="canEdit(apt)"
               upcoming
+              @edit="openEdit(apt)"
             />
           </div>
         </div>
 
-        <!-- Past section -->
+        <!-- Past -->
         <div v-if="pastAppointments.length > 0">
           <h2 class="text-xs font-bold text-[#9E7A5A] uppercase tracking-widest mb-3 px-1">
             Storico
@@ -113,6 +112,14 @@
         </div>
       </div>
     </main>
+
+    <!-- Edit modal -->
+    <EditAppointmentModal
+      :show="!!editingAppointment"
+      :appointment="editingAppointment"
+      @close="editingAppointment = null"
+      @saved="onAppointmentSaved"
+    />
   </div>
 </template>
 
@@ -121,22 +128,46 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useCustomerStore } from '@/stores/customer'
 import AppointmentItem from '@/components/customer/AppointmentItem.vue'
+import EditAppointmentModal from '@/components/customer/EditAppointmentModal.vue'
 
 const router = useRouter()
 const customerStore = useCustomerStore()
 
-const appointments = ref([])
-const loading = ref(true)
-const error = ref('')
+const appointments      = ref([])
+const loading           = ref(true)
+const error             = ref('')
+const editingAppointment = ref(null)
 
 const today = new Date().toISOString().split('T')[0]
 
 const upcomingAppointments = computed(() =>
-  appointments.value.filter(a => a.date >= today).reverse()
+  appointments.value.filter(a => {
+    const d = new Date(a.date).toISOString().split('T')[0]
+    return d >= today
+  }).sort((a, b) => a.date > b.date ? 1 : -1)
 )
 const pastAppointments = computed(() =>
-  appointments.value.filter(a => a.date < today)
+  appointments.value.filter(a => {
+    const d = new Date(a.date).toISOString().split('T')[0]
+    return d < today
+  })
 )
+
+// Modificabile solo se confermato e data > oggi (almeno domani)
+function canEdit(apt) {
+  if (apt.status !== 'CONFIRMED') return false
+  const d = new Date(apt.date).toISOString().split('T')[0]
+  return d > today
+}
+
+function openEdit(apt) {
+  editingAppointment.value = apt
+}
+
+function onAppointmentSaved(updated) {
+  const idx = appointments.value.findIndex(a => a.id === updated.id)
+  if (idx !== -1) appointments.value[idx] = updated
+}
 
 async function loadAppointments() {
   loading.value = true
@@ -150,7 +181,7 @@ async function loadAppointments() {
       router.push('/area-cliente/login?session=expired')
       return
     }
-    if (!res.ok) throw new Error('Errore nel caricamento')
+    if (!res.ok) throw new Error()
     appointments.value = await res.json()
   } catch {
     error.value = 'Impossibile caricare le prenotazioni. Riprova.'

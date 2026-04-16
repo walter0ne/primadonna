@@ -1,11 +1,44 @@
-const { Resend } = require('resend');
-
-const resend = new Resend(process.env.RESEND_API_KEY);
+// ── Brevo email service (API REST nativa, zero dipendenze npm) ────────────────
+const BREVO_API = 'https://api.brevo.com/v3/smtp/email';
 
 const SALON_NAME    = 'Primadonna';
 const SALON_ADDRESS = 'Corso Campano, 47 — 80014 Giugliano in Campania (NA)';
 const SALON_PHONE   = '+39 348 913 5964';
 const SALON_MAPS    = 'https://www.google.com/maps/search/?api=1&query=Corso+Campano+47+Giugliano+in+Campania+NA';
+
+// ── Core: invia via Brevo ─────────────────────────────────────────────────────
+async function sendEmail({ to, toName, subject, html }) {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    console.warn('[email] BREVO_API_KEY non impostata — email non inviata');
+    return;
+  }
+
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'ricci.walter.wr@gmail.com';
+  const senderName  = process.env.BREVO_SENDER_NAME  || SALON_NAME;
+
+  const res = await fetch(BREVO_API, {
+    method: 'POST',
+    headers: {
+      'accept':       'application/json',
+      'api-key':      apiKey,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      sender: { name: senderName, email: senderEmail },
+      to: [{ email: to, name: toName || to }],
+      subject,
+      htmlContent: html,
+    }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Brevo ${res.status}: ${text}`);
+  }
+
+  return res.json();
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function formatDate(date) {
@@ -40,7 +73,7 @@ function baseLayout(content) {
     .greeting { font-size: 17px; color: #2D1A0E; margin-bottom: 10px; font-weight: 500; }
     .lead { font-size: 14px; color: #6B4226; line-height: 1.6; margin-bottom: 28px; }
     .summary-card { background: linear-gradient(135deg, #F0E2CE, #F5ECD8); border: 1.5px solid #D4B896; border-radius: 14px; padding: 24px; margin-bottom: 20px; }
-    .summary-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #8B5A2B; text-transform: uppercase; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .summary-title { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: #8B5A2B; text-transform: uppercase; margin-bottom: 16px; }
     .row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #E8D5B7; }
     .row:last-child { border-bottom: none; padding-bottom: 0; }
     .row-label { font-size: 13px; color: #9E7A5A; }
@@ -73,9 +106,7 @@ function baseLayout(content) {
         <div class="header-title">PRIMADONNA</div>
         <div class="header-subtitle">Il tuo salone di fiducia</div>
       </div>
-      <div class="body">
-        ${content}
-      </div>
+      <div class="body">${content}</div>
       <div class="footer">
         <div class="footer-name">PRIMADONNA</div>
         <div class="footer-info">
@@ -96,66 +127,94 @@ async function sendBookingConfirmation(appointment, service) {
   const content = `
     <p class="greeting">Ciao <strong>${appointment.customerName}</strong>,</p>
     <p class="lead">La tua prenotazione è confermata! Non vediamo l'ora di vederti. 🎉</p>
-
     <div class="summary-card">
       <div class="summary-title">Riepilogo prenotazione</div>
-      <div class="row">
-        <span class="row-label">Servizio</span>
-        <span class="row-value">${service.name}</span>
-      </div>
-      <div class="row">
-        <span class="row-label">Data</span>
-        <span class="row-value">${dateStr}</span>
-      </div>
-      <div class="row">
-        <span class="row-label">Orario</span>
-        <span class="row-value">${appointment.startTime}</span>
-      </div>
-      <div class="row">
-        <span class="row-label">Durata</span>
-        <span class="row-value">${service.duration} minuti</span>
-      </div>
-      <div class="row row-total">
-        <span class="row-label">Totale</span>
-        <span class="row-value">€${Number(service.price).toFixed(2)}</span>
-      </div>
+      <div class="row"><span class="row-label">Servizio</span><span class="row-value">${service.name}</span></div>
+      <div class="row"><span class="row-label">Data</span><span class="row-value">${dateStr}</span></div>
+      <div class="row"><span class="row-label">Orario</span><span class="row-value">${appointment.startTime}</span></div>
+      <div class="row"><span class="row-label">Durata</span><span class="row-value">${service.duration} minuti</span></div>
+      <div class="row row-total"><span class="row-label">Totale</span><span class="row-value">€${Number(service.price).toFixed(2)}</span></div>
     </div>
-
     <div class="info-card">
       <div class="info-title">Dove ci trovi</div>
-      <div class="info-row">
-        <span class="info-icon">📍</span>
-        <span><a href="${SALON_MAPS}" style="color:#8B5A2B">${SALON_ADDRESS}</a></span>
-      </div>
-      <div class="info-row">
-        <span class="info-icon">📞</span>
-        <span><a href="tel:${SALON_PHONE.replace(/\s/g, '')}" style="color:#8B5A2B">${SALON_PHONE}</a></span>
-      </div>
+      <div class="info-row"><span class="info-icon">📍</span><span><a href="${SALON_MAPS}" style="color:#8B5A2B">${SALON_ADDRESS}</a></span></div>
+      <div class="info-row"><span class="info-icon">📞</span><span><a href="tel:${SALON_PHONE.replace(/\s/g, '')}" style="color:#8B5A2B">${SALON_PHONE}</a></span></div>
     </div>
+    <p class="note">Hai bisogno di modificare o cancellare? Accedi alla tua area personale o contattaci almeno 24 ore prima.</p>
+  `;
 
-    <p class="note">
-      Hai bisogno di modificare o cancellare? Contattaci almeno 24 ore prima al numero indicato sopra.
+  await sendEmail({
+    to:      appointment.customerEmail,
+    toName:  appointment.customerName,
+    subject: `Confermato: ${service.name} — ${dateStr}`,
+    html:    baseLayout(content),
+  }).catch(err => console.error('sendBookingConfirmation failed:', err.message));
+}
+
+// ── Email modifica prenotazione ───────────────────────────────────────────────
+async function sendBookingModified(appointment, service) {
+  const dateStr = capitalize(formatDate(appointment.date));
+
+  const content = `
+    <p class="greeting">Ciao <strong>${appointment.customerName}</strong>,</p>
+    <p class="lead">La tua prenotazione è stata modificata con successo. Ecco il nuovo riepilogo:</p>
+    <div class="summary-card">
+      <div class="summary-title">Nuovo riepilogo</div>
+      <div class="row"><span class="row-label">Servizio</span><span class="row-value">${service.name}</span></div>
+      <div class="row"><span class="row-label">Data</span><span class="row-value">${dateStr}</span></div>
+      <div class="row"><span class="row-label">Orario</span><span class="row-value">${appointment.startTime}</span></div>
+      <div class="row"><span class="row-label">Durata</span><span class="row-value">${service.duration} minuti</span></div>
+      <div class="row row-total"><span class="row-label">Totale</span><span class="row-value">€${Number(service.price).toFixed(2)}</span></div>
+    </div>
+    <div class="info-card">
+      <div class="info-title">Dove ci trovi</div>
+      <div class="info-row"><span class="info-icon">📍</span><span><a href="${SALON_MAPS}" style="color:#8B5A2B">${SALON_ADDRESS}</a></span></div>
+      <div class="info-row"><span class="info-icon">📞</span><span><a href="tel:${SALON_PHONE.replace(/\s/g, '')}" style="color:#8B5A2B">${SALON_PHONE}</a></span></div>
+    </div>
+    <p class="note">Se non hai richiesto tu questa modifica, contattaci subito al numero sopra.</p>
+  `;
+
+  await sendEmail({
+    to:      appointment.customerEmail,
+    toName:  appointment.customerName,
+    subject: `Modifica confermata: ${service.name} — ${dateStr}`,
+    html:    baseLayout(content),
+  }).catch(err => console.error('sendBookingModified failed:', err.message));
+}
+
+// ── Email reset password ──────────────────────────────────────────────────────
+async function sendPasswordReset(customer, resetUrl) {
+  const content = `
+    <p class="greeting">Ciao <strong>${customer.name}</strong>,</p>
+    <p class="lead">Abbiamo ricevuto una richiesta di reimpostazione della password per il tuo account.</p>
+    <div style="text-align:center; margin: 28px 0;">
+      <a href="${resetUrl}" class="cta-btn">Reimposta la password</a>
+    </div>
+    <p class="note" style="text-align:center; margin-bottom:12px;">
+      Il link è valido per <strong>1 ora</strong>. Dopo di che dovrai farne un altro.
+    </p>
+    <p class="note" style="text-align:center;">
+      Se non hai richiesto il reset della password, ignora questa email — il tuo account è al sicuro.
     </p>
   `;
 
-  await resend.emails.send({
-    from:    process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-    to:      appointment.customerEmail,
-    subject: `Confermato: ${service.name} — ${dateStr}`,
+  await sendEmail({
+    to:      customer.email,
+    toName:  customer.name,
+    subject: `Reimposta la tua password — ${SALON_NAME}`,
     html:    baseLayout(content),
-  }).catch(err => console.error('Email booking confirmation failed:', err.message));
+  }).catch(err => console.error('sendPasswordReset failed:', err.message));
 }
 
 // ── Notifica admin: nuova prenotazione ────────────────────────────────────────
 async function sendAdminBookingNotification(appointment, service) {
-  const notifyEmail = process.env.RESEND_NOTIFY_EMAIL;
-  if (!notifyEmail) return; // variabile non impostata → skip silenzioso
+  const notifyEmail = process.env.BREVO_NOTIFY_EMAIL;
+  if (!notifyEmail) return;
 
   const dateStr = capitalize(formatDate(appointment.date));
 
   const html = `<!DOCTYPE html>
-<html lang="it">
-<head><meta charset="UTF-8"><style>
+<html lang="it"><head><meta charset="UTF-8"><style>
   body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
   .card { background: #fff; max-width: 480px; margin: 0 auto; border-radius: 12px; padding: 28px; box-shadow: 0 2px 12px rgba(0,0,0,.08); }
   h2 { color: #8B5A2B; margin: 0 0 20px; font-size: 18px; }
@@ -165,29 +224,26 @@ async function sendAdminBookingNotification(appointment, service) {
   td:last-child { font-weight: 600; }
   .total td:last-child { color: #8B5A2B; font-size: 16px; }
 </style></head>
-<body>
-  <div class="card">
-    <h2>🗓 Nuova prenotazione</h2>
-    <table>
-      <tr><td>Cliente</td><td>${appointment.customerName}</td></tr>
-      <tr><td>Email</td><td>${appointment.customerEmail}</td></tr>
-      <tr><td>Telefono</td><td>${appointment.customerPhone}</td></tr>
-      <tr><td>Servizio</td><td>${service.name}</td></tr>
-      <tr><td>Data</td><td>${dateStr}</td></tr>
-      <tr><td>Orario</td><td>${appointment.startTime} – ${appointment.endTime}</td></tr>
-      ${appointment.notes ? `<tr><td>Note</td><td>${appointment.notes}</td></tr>` : ''}
-      <tr class="total"><td>Totale</td><td>€${Number(service.price).toFixed(2)}</td></tr>
-    </table>
-  </div>
-</body>
-</html>`;
+<body><div class="card">
+  <h2>🗓 Nuova prenotazione</h2>
+  <table>
+    <tr><td>Cliente</td><td>${appointment.customerName}</td></tr>
+    <tr><td>Email</td><td>${appointment.customerEmail}</td></tr>
+    <tr><td>Telefono</td><td>${appointment.customerPhone}</td></tr>
+    <tr><td>Servizio</td><td>${service.name}</td></tr>
+    <tr><td>Data</td><td>${dateStr}</td></tr>
+    <tr><td>Orario</td><td>${appointment.startTime} – ${appointment.endTime}</td></tr>
+    ${appointment.notes ? `<tr><td>Note</td><td>${appointment.notes}</td></tr>` : ''}
+    <tr class="total"><td>Totale</td><td>€${Number(service.price).toFixed(2)}</td></tr>
+  </table>
+</div></body></html>`;
 
-  await resend.emails.send({
-    from:    process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+  await sendEmail({
     to:      notifyEmail,
+    toName:  'Admin Primadonna',
     subject: `📅 Nuova prenotazione: ${appointment.customerName} — ${service.name} ${dateStr}`,
     html,
-  }).catch(err => console.error('Admin notification email failed:', err.message));
+  }).catch(err => console.error('sendAdminBookingNotification failed:', err.message));
 }
 
 // ── Email di benvenuto alla registrazione ─────────────────────────────────────
@@ -198,25 +254,27 @@ async function sendWelcomeEmail(customer) {
       Il tuo account Primadonna è stato creato con successo.
       Ora puoi prenotare i tuoi servizi preferiti e tenere traccia di tutti i tuoi appuntamenti.
     </p>
-
     <div class="info-card" style="text-align:center; padding:28px;">
       <div class="info-title" style="margin-bottom:18px">Cosa puoi fare ora</div>
       <p style="font-size:14px; color:#6B4226; margin-bottom:6px;">✂️ Prenota un servizio in pochi tap</p>
-      <p style="font-size:14px; color:#6B4226; margin-bottom:6px;">📋 Visualizza i tuoi appuntamenti</p>
+      <p style="font-size:14px; color:#6B4226; margin-bottom:6px;">📋 Visualizza e modifica i tuoi appuntamenti</p>
       <p style="font-size:14px; color:#6B4226; margin-bottom:20px;">📱 Ricevi conferme via email</p>
     </div>
-
-    <p class="note" style="text-align:center">
-      Ci vediamo presto da ${SALON_NAME}! 💛
-    </p>
+    <p class="note" style="text-align:center">Ci vediamo presto da ${SALON_NAME}! 💛</p>
   `;
 
-  await resend.emails.send({
-    from:    process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+  await sendEmail({
     to:      customer.email,
+    toName:  customer.name,
     subject: `Benvenuta in ${SALON_NAME}!`,
     html:    baseLayout(content),
-  }).catch(err => console.error('Welcome email failed:', err.message));
+  }).catch(err => console.error('sendWelcomeEmail failed:', err.message));
 }
 
-module.exports = { sendBookingConfirmation, sendWelcomeEmail, sendAdminBookingNotification };
+module.exports = {
+  sendBookingConfirmation,
+  sendBookingModified,
+  sendPasswordReset,
+  sendWelcomeEmail,
+  sendAdminBookingNotification,
+};

@@ -37,6 +37,14 @@ const router = createRouter({
       component: () => import('../views/CustomerDashboardView.vue'),
       meta: { requiresCustomerAuth: true },
     },
+    {
+      path: '/area-cliente/password-dimenticata',
+      component: () => import('../views/ForgotPasswordView.vue'),
+    },
+    {
+      path: '/area-cliente/reset-password',
+      component: () => import('../views/ResetPasswordView.vue'),
+    },
 
     // ── Auth admin ─────────────────────────────────────────────────────────
     {

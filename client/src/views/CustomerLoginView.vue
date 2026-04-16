@@ -74,6 +74,13 @@
             <p v-if="errors.password" class="mt-1 text-xs text-red-500">{{ errors.password }}</p>
           </div>
 
+          <!-- Forgot password -->
+          <div class="text-right -mt-2">
+            <RouterLink to="/area-cliente/password-dimenticata" class="text-xs text-[#9E7A5A] hover:text-[#8B5A2B] transition-colors">
+              Password dimenticata?
+            </RouterLink>
+          </div>
+
           <!-- Global error -->
           <div v-if="globalError" class="p-3 rounded-xl bg-red-50 border border-red-200">
             <p class="text-sm text-red-600 text-center">{{ globalError }}</p>
