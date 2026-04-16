@@ -170,8 +170,18 @@
           </button>
         </form>
 
-        <!-- Divider -->
+        <!-- Divider Google -->
         <div class="my-6 flex items-center gap-3">
+          <div class="flex-1 h-px bg-[#E8D5B7]"></div>
+          <span class="text-xs text-[#9E7A5A]">oppure registrati con</span>
+          <div class="flex-1 h-px bg-[#E8D5B7]"></div>
+        </div>
+
+        <!-- Google Sign-In -->
+        <GoogleSignInButton />
+
+        <!-- Divider login -->
+        <div class="my-5 flex items-center gap-3">
           <div class="flex-1 h-px bg-[#E8D5B7]"></div>
           <span class="text-xs text-[#9E7A5A]">hai già un account?</span>
           <div class="flex-1 h-px bg-[#E8D5B7]"></div>
@@ -202,6 +212,7 @@
 import { ref, computed } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import { useCustomerStore } from '@/stores/customer'
+import GoogleSignInButton from '@/components/customer/GoogleSignInButton.vue'
 
 const router = useRouter()
 const customerStore = useCustomerStore()

@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '../components/layout/AppHeader.vue'
 import AppFooter from '../components/layout/AppFooter.vue'
@@ -9,14 +9,26 @@ import TimeSlotGrid from '../components/booking/TimeSlotGrid.vue'
 import BookingForm from '../components/booking/BookingForm.vue'
 import BookingConfirmation from '../components/booking/BookingConfirmation.vue'
 import { useBookingStore } from '../stores/booking.js'
+import { useCustomerStore } from '../stores/customer.js'
 import { useApi } from '../composables/useApi.js'
 import { useToast } from '../composables/useToast.js'
 import { formatDate } from '../utils/formatters.js'
 
-const bookingStore = useBookingStore()
+const bookingStore  = useBookingStore()
+const customerStore = useCustomerStore()
 const { post, loading } = useApi()
 const { success, error: showError } = useToast()
 const router = useRouter()
+
+// Pre-popola i dati del cliente se è loggato
+onMounted(() => {
+  if (customerStore.isAuthenticated && customerStore.customer) {
+    const c = customerStore.customer
+    bookingStore.customerData.name  = c.name  || ''
+    bookingStore.customerData.email = c.email || ''
+    bookingStore.customerData.phone = c.phone || ''
+  }
+})
 
 const steps = [
   { num: 1, label: 'Servizio' },

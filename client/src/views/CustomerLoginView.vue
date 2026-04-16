@@ -107,8 +107,11 @@
           <div class="flex-1 h-px bg-[#E8D5B7]"></div>
         </div>
 
+        <!-- Google Sign-In -->
+        <GoogleSignInButton :redirect="route.query.redirect || '/area-cliente'" />
+
         <!-- Register link -->
-        <p class="text-center text-sm text-[#9E7A5A]">
+        <p class="text-center text-sm text-[#9E7A5A] mt-5">
           Non hai ancora un account?
           <RouterLink to="/area-cliente/registrati" class="text-[#8B5A2B] font-semibold hover:text-[#6B3F18] transition-colors">
             Registrati
@@ -133,6 +136,7 @@
 import { ref, computed } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useCustomerStore } from '@/stores/customer'
+import GoogleSignInButton from '@/components/customer/GoogleSignInButton.vue'
 
 const router = useRouter()
 const route  = useRoute()

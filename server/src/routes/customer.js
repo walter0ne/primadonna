@@ -72,8 +72,78 @@ router.post(
       const customer = await prisma.customer.findUnique({ where: { email } });
       if (!customer) return res.status(401).json({ error: 'Credenziali non valide' });
 
+      // Utente registrato solo con Google: non ha password
+      if (!customer.password) {
+        return res.status(401).json({ error: 'Questo account usa "Accedi con Google". Usa il pulsante Google per entrare.' });
+      }
+
       const valid = await bcrypt.compare(password, customer.password);
       if (!valid) return res.status(401).json({ error: 'Credenziali non valide' });
+
+      const token = jwt.sign(
+        { id: customer.id, email: customer.email, name: customer.name, role: 'customer' },
+        process.env.JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+
+      res.json({
+        token,
+        customer: { id: customer.id, email: customer.email, name: customer.name, phone: customer.phone },
+      });
+    } catch (err) { next(err); }
+  }
+);
+
+// ── POST /api/customer/auth/google ────────────────────────────────────────────
+router.post(
+  '/auth/google',
+  [body('credential').notEmpty().withMessage('Credenziale Google mancante')],
+  validate,
+  async (req, res, next) => {
+    try {
+      const { credential } = req.body;
+
+      // Verifica il token con Google (tokeninfo endpoint — zero dipendenze)
+      const googleRes = await fetch(
+        `https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${credential}`
+      );
+      if (!googleRes.ok) {
+        return res.status(401).json({ error: 'Token Google non valido' });
+      }
+      const payload = await googleRes.json();
+
+      // Verifica audience (client ID)
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      if (clientId && payload.aud !== clientId) {
+        return res.status(401).json({ error: 'Token Google non valido' });
+      }
+      if (!payload.email_verified) {
+        return res.status(401).json({ error: 'Email Google non verificata' });
+      }
+
+      const { sub: googleId, email, name } = payload;
+
+      // Cerca per googleId o email
+      let customer = await prisma.customer.findFirst({
+        where: { OR: [{ googleId }, { email }] },
+      });
+
+      if (customer) {
+        // Collega googleId se mancante (utente esistente che usa Google per la prima volta)
+        if (!customer.googleId) {
+          customer = await prisma.customer.update({
+            where: { id: customer.id },
+            data: { googleId },
+          });
+        }
+      } else {
+        // Nuovo utente: crea account
+        customer = await prisma.customer.create({
+          data: { googleId, email, name, phone: null, password: null },
+        });
+        // Email benvenuto non-blocking
+        sendWelcomeEmail(customer).catch(console.error);
+      }
 
       const token = jwt.sign(
         { id: customer.id, email: customer.email, name: customer.name, role: 'customer' },

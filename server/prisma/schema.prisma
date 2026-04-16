@@ -18,9 +18,10 @@ model Admin {
 model Customer {
   id                String        @id @default(cuid())
   email             String        @unique
-  password          String
+  password          String?       // opzionale: null per utenti Google/Apple
   name              String
-  phone             String
+  phone             String?       // opzionale: Google non lo fornisce
+  googleId          String?       @unique
   resetToken        String?
   resetTokenExpiry  DateTime?
   createdAt         DateTime      @default(now())
