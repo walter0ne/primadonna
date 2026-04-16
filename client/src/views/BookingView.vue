@@ -62,7 +62,7 @@ function onDateSelect(date) {
 
 async function submitBooking() {
   try {
-    await post('/appointments', {
+    const payload = {
       customerName:  bookingStore.customerData.name,
       customerPhone: bookingStore.customerData.phone,
       customerEmail: bookingStore.customerData.email,
@@ -70,7 +70,24 @@ async function submitBooking() {
       serviceId:     bookingStore.selectedService.id,
       date:          bookingStore.selectedDate,
       startTime:     bookingStore.selectedTime,
-    })
+    }
+
+    // Se il cliente è autenticato, usa il suo token per collegare la prenotazione all'account
+    if (customerStore.isAuthenticated && customerStore.token) {
+      const res = await fetch('/api/appointments', {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': `Bearer ${customerStore.token}`,
+        },
+        body: JSON.stringify(payload),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Errore durante la prenotazione')
+    } else {
+      await post('/appointments', payload)
+    }
+
     success('Prenotazione confermata!')
     router.push('/prenotazione-confermata')
   } catch (err) {
