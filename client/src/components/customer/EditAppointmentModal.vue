@@ -81,7 +81,6 @@
                   :min="minDate"
                   class="input-field"
                   :class="{ 'border-red-400': errors.date }"
-                  @change="onDateChange"
                 />
                 <p v-if="errors.date" class="mt-1 text-xs text-red-500">{{ errors.date }}</p>
               </div>
@@ -173,16 +172,19 @@ const emit = defineEmits(['close', 'saved'])
 
 const customerStore = useCustomerStore()
 
-const form         = ref({ serviceId: '', date: '', startTime: '', notes: '' })
-const services     = ref([])
-const slots        = ref([])
+const form            = ref({ serviceId: '', date: '', startTime: '', notes: '' })
+const services        = ref([])
+const slots           = ref([])
 const loadingServices = ref(false)
-const loadingSlots = ref(false)
-const saving       = ref(false)
-const errors       = ref({})
-const globalError  = ref('')
+const loadingSlots    = ref(false)
+const saving          = ref(false)
+const errors          = ref({})
+const globalError     = ref('')
 
-// Data minima = domani (usando date locali, non UTC, per evitare sfasamenti di fuso)
+// Flag per distinguere apertura iniziale da modifica utente
+let initialLoad = false
+
+// Data minima = domani (locale, non UTC, per evitare sfasamenti di fuso orario)
 const minDate = computed(() => {
   const d = new Date()
   d.setDate(d.getDate() + 1)
@@ -192,30 +194,42 @@ const minDate = computed(() => {
   return `${y}-${m}-${dd}`
 })
 
-// Quando si apre, carica servizi e precompila con i valori attuali
+// Quando si apre, precompila il form con i valori dell'appuntamento corrente
 watch(() => props.show, async (val) => {
   if (val && props.appointment) {
-    // Precompila il form con i valori attuali
-    const d = new Date(props.appointment.date)
+    const d  = new Date(props.appointment.date)
     const y  = d.getUTCFullYear()
     const m  = String(d.getUTCMonth() + 1).padStart(2, '0')
     const dd = String(d.getUTCDate()).padStart(2, '0')
-    form.value.date      = `${y}-${m}-${dd}`
+
+    slots.value       = []
+    errors.value      = {}
+    globalError.value = ''
+    initialLoad       = true   // il prossimo scatto del watch non deve azzerare startTime
+
+    form.value.serviceId = props.appointment.serviceId || ''
     form.value.startTime = props.appointment.startTime
     form.value.notes     = props.appointment.notes || ''
-    form.value.serviceId = props.appointment.serviceId || ''
-    errors.value    = {}
-    globalError.value = ''
-    slots.value = []
+    form.value.date      = `${y}-${m}-${dd}`   // scatena il watch [date, serviceId]
 
-    // Carica lista servizi
     await loadServices()
-
-    // Carica gli slot per la data corrente
-    if (form.value.date && form.value.serviceId) {
-      await loadSlots(form.value.date, form.value.serviceId)
-    }
   }
+})
+
+// Ricarica gli slot ogni volta che l'utente cambia data o servizio
+watch([() => form.value.date, () => form.value.serviceId], async ([newDate, newServiceId]) => {
+  if (!newDate || !newServiceId) return
+
+  if (initialLoad) {
+    // Prima apertura: non azzerare startTime (è già precompilato)
+    initialLoad = false
+  } else {
+    // Modifica esplicita dell'utente: resetta l'orario
+    form.value.startTime = ''
+    errors.value.date    = ''
+  }
+
+  await loadSlots(newDate, newServiceId)
 })
 
 async function loadServices() {
@@ -231,19 +245,8 @@ async function loadServices() {
   }
 }
 
-async function onServiceChange(svc) {
-  form.value.serviceId = svc.id
-  form.value.startTime = ''   // reset orario: la durata può essere diversa
-  errors.value.startTime = ''
-  if (form.value.date) await loadSlots(form.value.date, svc.id)
-}
-
-async function onDateChange() {
-  form.value.startTime = ''
-  errors.value.date    = ''
-  if (form.value.date && form.value.serviceId) {
-    await loadSlots(form.value.date, form.value.serviceId)
-  }
+function onServiceChange(svc) {
+  form.value.serviceId = svc.id   // il watch su serviceId ricarica gli slot
 }
 
 async function loadSlots(date, serviceId) {
