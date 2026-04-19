@@ -3,26 +3,40 @@
     <!-- Top bar -->
     <header class="sticky top-0 z-30 glass border-b border-[#E8D5B7]/60 px-4 py-3">
       <div class="max-w-2xl mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#8B5A2B] to-[#A8703E] flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-[#FBF7F1]" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+
+        <!-- Logo → Home -->
+        <RouterLink to="/" class="flex items-center gap-2 group">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-[#8B5A2B] to-[#A8703E] flex items-center justify-center shadow-sm">
+            <svg class="w-4 h-4 text-[#FBF7F1]" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
             </svg>
           </div>
-          <div>
+          <span class="font-serif text-lg font-bold tracking-widest text-[#2D1A0E] group-hover:text-[#8B5A2B] transition-colors">
+            PRIMADONNA
+          </span>
+        </RouterLink>
+
+        <!-- Nome utente + logout -->
+        <div class="flex items-center gap-3">
+          <div class="hidden sm:flex flex-col items-end">
             <p class="text-xs text-[#9E7A5A] leading-none">Benvenuta</p>
             <p class="text-sm font-semibold text-[#2D1A0E] leading-tight">{{ customerStore.customer?.name || 'Cliente' }}</p>
           </div>
+          <!-- Nome compatto su mobile -->
+          <span class="sm:hidden text-sm font-semibold text-[#2D1A0E]">
+            {{ customerStore.customer?.name?.split(' ')[0] || 'Cliente' }}
+          </span>
+          <button
+            @click="handleLogout"
+            class="flex items-center gap-1.5 text-sm text-[#9E7A5A] hover:text-red-500 transition-colors px-3 py-1.5 rounded-xl hover:bg-red-50"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
+            </svg>
+            <span class="hidden sm:inline">Esci</span>
+          </button>
         </div>
-        <button
-          @click="handleLogout"
-          class="flex items-center gap-1.5 text-sm text-[#9E7A5A] hover:text-red-500 transition-colors px-3 py-1.5 rounded-xl hover:bg-red-50"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
-          </svg>
-          Esci
-        </button>
+
       </div>
     </header>
 
