@@ -261,7 +261,7 @@ router.get('/appointments', customerAuthMiddleware, async (req, res, next) => {
 });
 
 // ── PUT /api/customer/appointments/:id ───────────────────────────────────────
-// Modifica data/orario/note — solo fino al giorno prima
+// Modifica data/orario/servizio/note — solo fino al giorno prima
 router.put(
   '/appointments/:id',
   customerAuthMiddleware,
@@ -269,13 +269,14 @@ router.put(
     param('id').notEmpty(),
     body('date').notEmpty().withMessage('Data obbligatoria'),
     body('startTime').matches(/^\d{2}:\d{2}$/).withMessage('Orario non valido'),
+    body('serviceId').optional().isString(),
     body('notes').optional().isString(),
   ],
   validate,
   async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { date, startTime, notes } = req.body;
+      const { date, startTime, notes, serviceId } = req.body;
 
       // Verifica che l'appuntamento appartenga al cliente
       const appointment = await prisma.appointment.findFirst({
@@ -305,9 +306,17 @@ router.put(
         return res.status(400).json({ error: 'Non è più possibile modificare questa prenotazione' });
       }
 
+      // Se il cliente vuole cambiare servizio, verifica che esista
+      let service = appointment.service;
+      if (serviceId && serviceId !== appointment.serviceId) {
+        const newService = await prisma.service.findUnique({ where: { id: serviceId, isActive: true } });
+        if (!newService) return res.status(404).json({ error: 'Servizio non trovato' });
+        service = newService;
+      }
+
       // Calcola nuovo endTime
       const startMin = timeToMinutes(startTime);
-      const endMin   = startMin + appointment.service.duration;
+      const endMin   = startMin + service.duration;
       const endTime  = minutesToTime(endMin);
 
       // Controlla conflitti sul nuovo slot (esclude l'appuntamento corrente)
@@ -336,6 +345,7 @@ router.put(
           startTime,
           endTime,
           notes:     notes ?? appointment.notes,
+          ...(serviceId && serviceId !== appointment.serviceId ? { serviceId } : {}),
         },
         include: { service: true },
       });

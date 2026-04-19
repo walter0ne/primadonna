@@ -29,10 +29,7 @@
 
             <!-- Header -->
             <div class="flex items-center justify-between px-6 py-4 border-b border-[#E8D5B7]">
-              <div>
-                <h2 class="font-bold text-[#2D1A0E] text-lg">Modifica prenotazione</h2>
-                <p class="text-xs text-[#9E7A5A] mt-0.5">{{ appointment?.service?.name }}</p>
-              </div>
+              <h2 class="font-bold text-[#2D1A0E] text-lg">Modifica prenotazione</h2>
               <button @click="$emit('close')" class="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-[#F0E2CE] transition-colors text-[#9E7A5A]">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -42,11 +39,42 @@
 
             <!-- Body -->
             <div class="px-6 py-5 space-y-5">
+
+              <!-- Servizio -->
+              <div>
+                <label class="block text-sm font-medium text-[#2D1A0E] mb-1.5">Servizio</label>
+                <div v-if="loadingServices" class="flex items-center gap-2 text-sm text-[#9E7A5A] py-2">
+                  <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Caricamento servizi…
+                </div>
+                <div v-else class="space-y-2">
+                  <button
+                    v-for="svc in services"
+                    :key="svc.id"
+                    type="button"
+                    @click="onServiceChange(svc)"
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 text-left transition-all"
+                    :class="form.serviceId === svc.id
+                      ? 'bg-[#8B5A2B]/10 border-[#8B5A2B] text-[#2D1A0E]'
+                      : 'bg-white border-[#E8D5B7] text-[#2D1A0E] hover:border-[#C49A6C]'"
+                  >
+                    <div>
+                      <p class="font-medium text-sm">{{ svc.name }}</p>
+                      <p class="text-xs text-[#9E7A5A] mt-0.5">{{ svc.duration }} min · €{{ svc.price }}</p>
+                    </div>
+                    <svg v-if="form.serviceId === svc.id" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#8B5A2B] shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
               <!-- Data -->
               <div>
-                <label class="block text-sm font-medium text-[#2D1A0E] mb-1.5">
-                  Nuova data
-                </label>
+                <label class="block text-sm font-medium text-[#2D1A0E] mb-1.5">Data</label>
                 <input
                   v-model="form.date"
                   type="date"
@@ -60,7 +88,7 @@
 
               <!-- Orario -->
               <div>
-                <label class="block text-sm font-medium text-[#2D1A0E] mb-1.5">Nuovo orario</label>
+                <label class="block text-sm font-medium text-[#2D1A0E] mb-1.5">Orario</label>
                 <div v-if="loadingSlots" class="flex items-center gap-2 text-sm text-[#9E7A5A] py-2">
                   <svg class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -70,6 +98,9 @@
                 </div>
                 <div v-else-if="!form.date" class="text-sm text-[#9E7A5A] py-2">
                   Seleziona prima una data
+                </div>
+                <div v-else-if="!form.serviceId" class="text-sm text-[#9E7A5A] py-2">
+                  Seleziona prima un servizio
                 </div>
                 <div v-else-if="slots.length === 0" class="text-sm text-[#9E7A5A] py-2">
                   Nessun orario disponibile per questa data
@@ -113,7 +144,7 @@
               <button @click="$emit('close')" class="btn-secondary flex-1">Annulla</button>
               <button
                 @click="handleSave"
-                :disabled="saving || !form.date || !form.startTime"
+                :disabled="saving || !form.date || !form.startTime || !form.serviceId"
                 class="btn-primary flex-1 flex items-center justify-center gap-2"
               >
                 <svg v-if="saving" class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -142,53 +173,94 @@ const emit = defineEmits(['close', 'saved'])
 
 const customerStore = useCustomerStore()
 
-const form = ref({ date: '', startTime: '', notes: '' })
-const slots = ref([])
+const form         = ref({ serviceId: '', date: '', startTime: '', notes: '' })
+const services     = ref([])
+const slots        = ref([])
+const loadingServices = ref(false)
 const loadingSlots = ref(false)
-const saving = ref(false)
-const errors = ref({})
-const globalError = ref('')
+const saving       = ref(false)
+const errors       = ref({})
+const globalError  = ref('')
 
-// Data minima = domani
+// Data minima = domani (usando date locali, non UTC, per evitare sfasamenti di fuso)
 const minDate = computed(() => {
   const d = new Date()
   d.setDate(d.getDate() + 1)
-  return d.toISOString().split('T')[0]
+  const y  = d.getFullYear()
+  const m  = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${dd}`
 })
 
-// Quando si apre, precompila con i valori attuali
-watch(() => props.show, (val) => {
+// Quando si apre, carica servizi e precompila con i valori attuali
+watch(() => props.show, async (val) => {
   if (val && props.appointment) {
+    // Precompila il form con i valori attuali
     const d = new Date(props.appointment.date)
-    form.value.date      = d.toISOString().split('T')[0]
+    const y  = d.getUTCFullYear()
+    const m  = String(d.getUTCMonth() + 1).padStart(2, '0')
+    const dd = String(d.getUTCDate()).padStart(2, '0')
+    form.value.date      = `${y}-${m}-${dd}`
     form.value.startTime = props.appointment.startTime
     form.value.notes     = props.appointment.notes || ''
-    errors.value = {}
+    form.value.serviceId = props.appointment.serviceId || ''
+    errors.value    = {}
     globalError.value = ''
-    if (form.value.date) loadSlots(form.value.date)
+    slots.value = []
+
+    // Carica lista servizi
+    await loadServices()
+
+    // Carica gli slot per la data corrente
+    if (form.value.date && form.value.serviceId) {
+      await loadSlots(form.value.date, form.value.serviceId)
+    }
   }
 })
 
-async function onDateChange() {
-  form.value.startTime = ''
-  errors.value.date = ''
-  if (form.value.date) await loadSlots(form.value.date)
+async function loadServices() {
+  loadingServices.value = true
+  try {
+    const res = await fetch('/api/services')
+    if (!res.ok) throw new Error()
+    services.value = await res.json()
+  } catch {
+    services.value = []
+  } finally {
+    loadingServices.value = false
+  }
 }
 
-async function loadSlots(date) {
-  if (!props.appointment?.service) return
+async function onServiceChange(svc) {
+  form.value.serviceId = svc.id
+  form.value.startTime = ''   // reset orario: la durata può essere diversa
+  errors.value.startTime = ''
+  if (form.value.date) await loadSlots(form.value.date, svc.id)
+}
+
+async function onDateChange() {
+  form.value.startTime = ''
+  errors.value.date    = ''
+  if (form.value.date && form.value.serviceId) {
+    await loadSlots(form.value.date, form.value.serviceId)
+  }
+}
+
+async function loadSlots(date, serviceId) {
   loadingSlots.value = true
   slots.value = []
   try {
-    // Usa l'endpoint availability esistente
-    const serviceId = props.appointment.serviceId
     const res = await fetch(`/api/availability?date=${date}&serviceId=${serviceId}`)
     if (!res.ok) throw new Error()
     const data = await res.json()
-    // Includi lo slot corrente se la data non cambia
-    const originalDate = new Date(props.appointment.date).toISOString().split('T')[0]
+
+    // Se la data e il servizio non cambiano, includi lo slot corrente anche se "occupato"
+    const originalDate = (() => {
+      const d = new Date(props.appointment.date)
+      return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`
+    })()
     let available = data.slots || []
-    if (date === originalDate && !available.includes(props.appointment.startTime)) {
+    if (date === originalDate && serviceId === props.appointment.serviceId && !available.includes(props.appointment.startTime)) {
       available = [props.appointment.startTime, ...available].sort()
     }
     slots.value = available
@@ -200,9 +272,10 @@ async function loadSlots(date) {
 }
 
 async function handleSave() {
-  errors.value = {}
+  errors.value  = {}
   globalError.value = ''
 
+  if (!form.value.serviceId) { globalError.value = 'Seleziona un servizio'; return }
   if (!form.value.date)      { errors.value.date = 'Seleziona una data'; return }
   if (!form.value.startTime) { errors.value.startTime = 'Seleziona un orario'; return }
 
@@ -212,9 +285,10 @@ async function handleSave() {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${customerStore.token}`,
+        Authorization:  `Bearer ${customerStore.token}`,
       },
       body: JSON.stringify({
+        serviceId: form.value.serviceId,
         date:      form.value.date,
         startTime: form.value.startTime,
         notes:     form.value.notes,
