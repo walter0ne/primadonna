@@ -187,6 +187,7 @@ async function confirmDelete(id) {
         <thead>
           <tr class="border-b border-accent-warm text-left text-xs text-primary/40 uppercase tracking-wider">
             <th class="pb-3 pr-4 font-semibold">Servizio</th>
+            <th class="pb-3 pr-4 font-semibold">Categoria</th>
             <th class="pb-3 pr-4 font-semibold">Durata</th>
             <th class="pb-3 pr-4 font-semibold">Stato</th>
             <th class="pb-3 font-semibold">Azioni</th>
@@ -196,8 +197,15 @@ async function confirmDelete(id) {
           <tr v-for="service in services" :key="service.id" class="hover:bg-beige/50 transition-colors">
             <td class="py-3.5 pr-4">
               <p class="font-semibold text-secondary">{{ service.name }}</p>
-              <p class="text-primary/40 text-xs">{{ service.category === 'lunghi' ? 'Capelli lunghi' : 'Corti / media lunghezza' }}</p>
               <p v-if="service.description" class="text-primary/30 text-xs truncate max-w-[200px]">{{ service.description }}</p>
+            </td>
+            <td class="py-3.5 pr-4">
+              <span
+                class="text-xs font-semibold px-2.5 py-1 rounded-xl"
+                :class="service.category === 'lunghi' ? 'bg-purple-50 text-purple-600' : 'bg-sky-50 text-sky-600'"
+              >
+                {{ service.category === 'lunghi' ? 'Lunghi' : 'Corti / medi' }}
+              </span>
             </td>
             <td class="py-3.5 pr-4 text-primary/60">{{ formatDuration(service.duration) }}</td>
             <td class="py-3.5 pr-4">
