@@ -124,12 +124,22 @@ async function confirmDelete(id) {
           </span>
 
           <div class="flex items-center gap-2">
-            <button
-              @click="toggleActive(service)"
-              class="text-xs px-3 py-1.5 rounded-xl font-semibold transition-colors"
+            <!-- Stato corrente (badge statico) -->
+            <span
+              class="text-xs px-2.5 py-1 rounded-xl font-semibold"
               :class="service.isActive ? 'bg-success/10 text-success' : 'bg-beige text-primary/40 border border-accent-warm'"
             >
               {{ service.isActive ? 'Attivo' : 'Inattivo' }}
+            </span>
+            <!-- Azione disabilita/abilita -->
+            <button
+              @click="toggleActive(service)"
+              class="text-xs px-3 py-1.5 rounded-xl font-semibold border transition-colors"
+              :class="service.isActive
+                ? 'border-amber-300 text-amber-600 hover:bg-amber-50'
+                : 'border-success/40 text-success hover:bg-success/10'"
+            >
+              {{ service.isActive ? 'Disabilita' : 'Abilita' }}
             </button>
             <button @click="openEdit(service)" class="btn-ghost text-xs px-3 py-1.5">
               Modifica
@@ -189,13 +199,25 @@ async function confirmDelete(id) {
             </td>
             <td class="py-3.5 pr-4 text-primary/60">{{ formatDuration(service.duration) }}</td>
             <td class="py-3.5 pr-4">
-              <button
-                @click="toggleActive(service)"
-                class="text-xs px-2.5 py-1 rounded-xl font-semibold transition-colors"
-                :class="service.isActive ? 'bg-success/10 text-success' : 'bg-beige text-primary/40 border border-accent-warm'"
-              >
-                {{ service.isActive ? 'Attivo' : 'Inattivo' }}
-              </button>
+              <div class="flex items-center gap-2">
+                <!-- Stato corrente (badge statico) -->
+                <span
+                  class="text-xs px-2.5 py-1 rounded-xl font-semibold"
+                  :class="service.isActive ? 'bg-success/10 text-success' : 'bg-beige text-primary/40 border border-accent-warm'"
+                >
+                  {{ service.isActive ? 'Attivo' : 'Inattivo' }}
+                </span>
+                <!-- Azione disabilita/abilita -->
+                <button
+                  @click="toggleActive(service)"
+                  class="text-xs px-2.5 py-1 rounded-xl font-semibold border transition-colors"
+                  :class="service.isActive
+                    ? 'border-amber-300 text-amber-600 hover:bg-amber-50'
+                    : 'border-success/40 text-success hover:bg-success/10'"
+                >
+                  {{ service.isActive ? 'Disabilita' : 'Abilita' }}
+                </button>
+              </div>
             </td>
             <td class="py-3.5 space-y-2">
               <div class="flex items-center gap-3">
