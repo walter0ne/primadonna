@@ -21,7 +21,7 @@ const deleting         = ref(false)
 
 function openCreate() {
   editingService.value = null
-  form.value = { name: '', description: '', duration: 30, category: 'corti_medi', sortOrder: props.services.length + 1 }
+  form.value = { name: '', description: '', duration: 30, category: '', sortOrder: props.services.length + 1 }
   showModal.value = true
 }
 
@@ -308,7 +308,8 @@ async function confirmDelete(id) {
             </div>
             <div class="space-y-1.5">
               <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">Categoria *</label>
-              <select v-model="form.category" class="input-field" required>
+              <select v-model="form.category" class="input-field">
+                <option value="">— Nessuna categoria —</option>
                 <option value="corti_medi">Capelli corti / media lunghezza</option>
                 <option value="lunghi">Capelli lunghi</option>
               </select>
