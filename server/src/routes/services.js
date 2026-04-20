@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 const serviceValidators = [
   body('name').trim().notEmpty().withMessage('Nome obbligatorio'),
   body('duration').isInt({ min: 5, max: 480 }).withMessage('Durata in minuti (5-480)'),
-  body('price').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Prezzo non valido'),
+  body('price').optional({ values: 'falsy' }).isDecimal({ decimal_digits: '0,2' }).withMessage('Prezzo non valido'),
   body('description').optional().trim(),
   body('sortOrder').optional().isInt({ min: 0 }),
 ];

@@ -12,7 +12,7 @@ const { post, put, del } = useApi()
 
 const showModal      = ref(false)
 const editingService = ref(null)
-const form = ref({ name: '', description: '', duration: 30, price: '', sortOrder: 0 })
+const form = ref({ name: '', description: '', duration: 30, sortOrder: 0 })
 
 // Conferma eliminazione
 const confirmDeleteId  = ref(null)
@@ -21,7 +21,7 @@ const deleting         = ref(false)
 
 function openCreate() {
   editingService.value = null
-  form.value = { name: '', description: '', duration: 30, price: '', sortOrder: props.services.length + 1 }
+  form.value = { name: '', description: '', duration: 30, sortOrder: props.services.length + 1 }
   showModal.value = true
 }
 
@@ -31,7 +31,6 @@ function openEdit(service) {
     name:        service.name,
     description: service.description || '',
     duration:    service.duration,
-    price:       Number(service.price),
     sortOrder:   service.sortOrder,
   }
   showModal.value = true
