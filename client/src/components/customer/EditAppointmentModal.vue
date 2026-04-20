@@ -55,7 +55,7 @@
                 >
                   <div>
                     <p class="font-semibold text-sm text-[#2D1A0E]">{{ svc.name }}</p>
-                    <p class="text-xs text-[#9E7A5A] mt-0.5">{{ svc.duration }} min · €{{ svc.price }}</p>
+                    <p class="text-xs text-[#9E7A5A] mt-0.5">{{ svc.duration }} min</p>
                   </div>
                   <div
                     class="w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all"

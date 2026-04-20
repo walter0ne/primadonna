@@ -68,10 +68,6 @@ onMounted(() => {
               <span class="text-xs text-primary/50 font-medium">Orario</span>
               <span class="font-semibold text-secondary text-sm">{{ time }}</span>
             </div>
-            <div class="flex items-center justify-between pt-3 border-t border-accent/60">
-              <span class="font-semibold text-secondary text-sm">Totale</span>
-              <span class="font-bold text-primary text-lg">{{ formatPrice(service?.price) }}</span>
-            </div>
           </div>
         </div>
 

@@ -36,11 +36,6 @@ const bookingStore = useBookingStore()
         <span class="text-xs text-primary/50 font-medium">Durata</span>
         <span class="badge">{{ formatDuration(bookingStore.selectedService?.duration) }}</span>
       </div>
-      <!-- Totale -->
-      <div class="flex items-center justify-between pt-3">
-        <span class="font-semibold text-secondary text-sm">Totale</span>
-        <span class="font-bold text-primary text-lg">{{ formatPrice(bookingStore.selectedService?.price) }}</span>
-      </div>
     </div>
   </div>
 </template>

@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 const serviceValidators = [
   body('name').trim().notEmpty().withMessage('Nome obbligatorio'),
   body('duration').isInt({ min: 5, max: 480 }).withMessage('Durata in minuti (5-480)'),
-  body('price').isDecimal({ decimal_digits: '0,2' }).withMessage('Prezzo non valido'),
+  body('price').optional().isDecimal({ decimal_digits: '0,2' }).withMessage('Prezzo non valido'),
   body('description').optional().trim(),
   body('sortOrder').optional().isInt({ min: 0 }),
 ];
@@ -45,7 +45,7 @@ router.post('/', authMiddleware, serviceValidators, validate, async (req, res, n
   try {
     const { name, description, duration, price, sortOrder } = req.body;
     const service = await prisma.service.create({
-      data: { name, description, duration: Number(duration), price: Number(price), sortOrder: sortOrder ? Number(sortOrder) : 0 },
+      data: { name, description, duration: Number(duration), price: price !== undefined ? Number(price) : 0, sortOrder: sortOrder ? Number(sortOrder) : 0 },
     });
     res.status(201).json(service);
   } catch (err) {

@@ -113,7 +113,6 @@ async function confirmDelete(id) {
             <p class="font-semibold text-secondary text-sm">{{ service.name }}</p>
             <p v-if="service.description" class="text-xs text-primary/40 mt-0.5 line-clamp-1">{{ service.description }}</p>
           </div>
-          <span class="font-bold text-primary text-sm shrink-0">{{ formatPrice(service.price) }}</span>
         </div>
 
         <div class="flex items-center justify-between">
@@ -178,7 +177,6 @@ async function confirmDelete(id) {
           <tr class="border-b border-accent-warm text-left text-xs text-primary/40 uppercase tracking-wider">
             <th class="pb-3 pr-4 font-semibold">Servizio</th>
             <th class="pb-3 pr-4 font-semibold">Durata</th>
-            <th class="pb-3 pr-4 font-semibold">Prezzo</th>
             <th class="pb-3 pr-4 font-semibold">Stato</th>
             <th class="pb-3 font-semibold">Azioni</th>
           </tr>
@@ -190,7 +188,6 @@ async function confirmDelete(id) {
               <p v-if="service.description" class="text-primary/40 text-xs truncate max-w-[200px]">{{ service.description }}</p>
             </td>
             <td class="py-3.5 pr-4 text-primary/60">{{ formatDuration(service.duration) }}</td>
-            <td class="py-3.5 pr-4 font-bold text-primary">{{ formatPrice(service.price) }}</td>
             <td class="py-3.5 pr-4">
               <button
                 @click="toggleActive(service)"
@@ -277,15 +274,9 @@ async function confirmDelete(id) {
               <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">Descrizione</label>
               <input v-model="form.description" type="text" class="input-field" placeholder="Breve descrizione (opzionale)" />
             </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">Durata (min) *</label>
-                <input v-model.number="form.duration" type="number" min="5" max="480" class="input-field" required />
-              </div>
-              <div class="space-y-1.5">
-                <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">Prezzo (€) *</label>
-                <input v-model="form.price" type="number" step="0.01" min="0" class="input-field" required placeholder="0.00" />
-              </div>
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">Durata (min) *</label>
+              <input v-model.number="form.duration" type="number" min="5" max="480" class="input-field" required />
             </div>
             <div class="flex gap-3 pt-2">
               <button type="button" @click="showModal = false" class="btn-secondary flex-1">Annulla</button>

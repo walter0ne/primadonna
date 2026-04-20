@@ -102,13 +102,10 @@ onMounted(async () => {
           :key="service.id"
           class="card p-5 flex flex-col gap-3 animate-fade-in-up group hover:shadow-strong hover:-translate-y-1 transition-all duration-300"
         >
-          <!-- Nome + prezzo -->
-          <div class="flex items-start justify-between gap-2">
-            <h3 class="font-semibold text-secondary text-base leading-snug group-hover:text-primary transition-colors">
-              {{ service.name }}
-            </h3>
-            <span class="text-primary font-bold text-sm shrink-0">{{ formatPrice(service.price) }}</span>
-          </div>
+          <!-- Nome -->
+          <h3 class="font-semibold text-secondary text-base leading-snug group-hover:text-primary transition-colors">
+            {{ service.name }}
+          </h3>
 
           <!-- Descrizione -->
           <p v-if="service.description" class="text-primary/50 text-xs leading-relaxed flex-1">

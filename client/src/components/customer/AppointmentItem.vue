@@ -4,12 +4,7 @@
       <!-- Service name -->
       <div>
         <p class="font-semibold text-[#2D1A0E] text-sm leading-tight">{{ appointment.service?.name || '—' }}</p>
-        <p class="text-xs text-[#9E7A5A] mt-0.5">
-          {{ appointment.service?.duration }} min
-          <span v-if="appointment.service?.price" class="ml-2 font-semibold text-[#8B5A2B]">
-            €{{ Number(appointment.service.price).toFixed(2) }}
-          </span>
-        </p>
+        <p class="text-xs text-[#9E7A5A] mt-0.5">{{ appointment.service?.duration }} min</p>
       </div>
 
       <!-- Status badge -->
