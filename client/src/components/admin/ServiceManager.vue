@@ -68,7 +68,7 @@ async function confirmDelete(id) {
   try {
     const res = await fetch(`/api/services/${id}`, {
       method: 'DELETE',
-      headers: { Authorization: `Bearer ${localStorage.getItem('pd_admin_token')}` },
+      headers: { Authorization: `Bearer ${localStorage.getItem('pd_token')}` },
     })
     const data = await res.json()
     if (!res.ok) {
