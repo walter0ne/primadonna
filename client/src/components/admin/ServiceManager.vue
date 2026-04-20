@@ -12,7 +12,7 @@ const { post, put, del } = useApi()
 
 const showModal      = ref(false)
 const editingService = ref(null)
-const form = ref({ name: '', description: '', duration: 30, sortOrder: 0 })
+const form = ref({ name: '', description: '', duration: 30, category: 'corti_medi', sortOrder: 0 })
 
 // Conferma eliminazione
 const confirmDeleteId  = ref(null)
@@ -21,7 +21,7 @@ const deleting         = ref(false)
 
 function openCreate() {
   editingService.value = null
-  form.value = { name: '', description: '', duration: 30, sortOrder: props.services.length + 1 }
+  form.value = { name: '', description: '', duration: 30, category: 'corti_medi', sortOrder: props.services.length + 1 }
   showModal.value = true
 }
 
@@ -31,6 +31,7 @@ function openEdit(service) {
     name:        service.name,
     description: service.description || '',
     duration:    service.duration,
+    category:    service.category || 'corti_medi',
     sortOrder:   service.sortOrder,
   }
   showModal.value = true
@@ -110,7 +111,8 @@ async function confirmDelete(id) {
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0">
             <p class="font-semibold text-secondary text-sm">{{ service.name }}</p>
-            <p v-if="service.description" class="text-xs text-primary/40 mt-0.5 line-clamp-1">{{ service.description }}</p>
+            <p class="text-xs text-primary/40 mt-0.5">{{ service.category === 'lunghi' ? 'Capelli lunghi' : 'Corti / media lunghezza' }}</p>
+            <p v-if="service.description" class="text-xs text-primary/30 line-clamp-1">{{ service.description }}</p>
           </div>
         </div>
 
@@ -194,7 +196,8 @@ async function confirmDelete(id) {
           <tr v-for="service in services" :key="service.id" class="hover:bg-beige/50 transition-colors">
             <td class="py-3.5 pr-4">
               <p class="font-semibold text-secondary">{{ service.name }}</p>
-              <p v-if="service.description" class="text-primary/40 text-xs truncate max-w-[200px]">{{ service.description }}</p>
+              <p class="text-primary/40 text-xs">{{ service.category === 'lunghi' ? 'Capelli lunghi' : 'Corti / media lunghezza' }}</p>
+              <p v-if="service.description" class="text-primary/30 text-xs truncate max-w-[200px]">{{ service.description }}</p>
             </td>
             <td class="py-3.5 pr-4 text-primary/60">{{ formatDuration(service.duration) }}</td>
             <td class="py-3.5 pr-4">
@@ -294,6 +297,13 @@ async function confirmDelete(id) {
             <div class="space-y-1.5">
               <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">Descrizione</label>
               <input v-model="form.description" type="text" class="input-field" placeholder="Breve descrizione (opzionale)" />
+            </div>
+            <div class="space-y-1.5">
+              <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">Categoria *</label>
+              <select v-model="form.category" class="input-field" required>
+                <option value="corti_medi">Capelli corti / media lunghezza</option>
+                <option value="lunghi">Capelli lunghi</option>
+              </select>
             </div>
             <div class="space-y-1.5">
               <label class="block text-xs font-semibold text-secondary/60 uppercase tracking-wider">Durata (min) *</label>

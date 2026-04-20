@@ -11,6 +11,7 @@ const serviceValidators = [
   body('name').trim().notEmpty().withMessage('Nome obbligatorio'),
   body('duration').isInt({ min: 5, max: 480 }).withMessage('Durata in minuti (5-480)'),
   body('price').optional({ values: 'falsy' }).isDecimal({ decimal_digits: '0,2' }).withMessage('Prezzo non valido'),
+  body('category').optional().isIn(['corti_medi', 'lunghi']).withMessage('Categoria non valida'),
   body('description').optional().trim(),
   body('sortOrder').optional().isInt({ min: 0 }),
 ];
@@ -43,9 +44,9 @@ router.get('/all', authMiddleware, async (req, res, next) => {
 // POST /api/services
 router.post('/', authMiddleware, serviceValidators, validate, async (req, res, next) => {
   try {
-    const { name, description, duration, price, sortOrder } = req.body;
+    const { name, description, duration, price, category, sortOrder } = req.body;
     const service = await prisma.service.create({
-      data: { name, description, duration: Number(duration), price: price !== undefined ? Number(price) : 0, sortOrder: sortOrder ? Number(sortOrder) : 0 },
+      data: { name, description, duration: Number(duration), price: price !== undefined ? Number(price) : 0, category: category || 'corti_medi', sortOrder: sortOrder ? Number(sortOrder) : 0 },
     });
     res.status(201).json(service);
   } catch (err) {
@@ -57,7 +58,7 @@ router.post('/', authMiddleware, serviceValidators, validate, async (req, res, n
 router.put('/:id', authMiddleware, serviceValidators, validate, async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { name, description, duration, price, sortOrder, isActive } = req.body;
+    const { name, description, duration, price, category, sortOrder, isActive } = req.body;
     const service = await prisma.service.update({
       where: { id },
       data: {
@@ -65,6 +66,7 @@ router.put('/:id', authMiddleware, serviceValidators, validate, async (req, res,
         description,
         duration: Number(duration),
         ...(price !== undefined && price !== '' ? { price: Number(price) } : {}),
+        ...(category ? { category } : {}),
         sortOrder: sortOrder !== undefined ? Number(sortOrder) : undefined,
         isActive: isActive !== undefined ? Boolean(isActive) : undefined,
       },

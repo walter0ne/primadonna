@@ -42,30 +42,40 @@
                 </svg>
                 Caricamento servizi…
               </div>
-              <div v-else class="space-y-2">
-                <button
-                  v-for="svc in services"
-                  :key="svc.id"
-                  type="button"
-                  @click="selectService(svc)"
-                  class="w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 text-left transition-all"
-                  :class="form.serviceId === svc.id
-                    ? 'bg-[#8B5A2B]/10 border-[#8B5A2B]'
-                    : 'bg-white border-[#E8D5B7] hover:border-[#C49A6C]'"
-                >
-                  <div>
-                    <p class="font-semibold text-sm text-[#2D1A0E]">{{ svc.name }}</p>
-                    <p class="text-xs text-[#9E7A5A] mt-0.5">{{ svc.duration }} min</p>
+              <div v-else class="space-y-5">
+                <div v-for="group in groupedServices" :key="group.key">
+                  <!-- Intestazione categoria -->
+                  <div class="flex items-center gap-2 mb-2">
+                    <div class="w-1 h-4 rounded-full bg-[#8B5A2B]"></div>
+                    <p class="text-xs font-bold text-[#9E7A5A] uppercase tracking-wider">{{ group.label }}</p>
                   </div>
-                  <div
-                    class="w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all"
-                    :class="form.serviceId === svc.id ? 'border-[#8B5A2B] bg-[#8B5A2B]' : 'border-[#D4B896]'"
-                  >
-                    <svg v-if="form.serviceId === svc.id" xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                    </svg>
+                  <!-- Servizi della categoria -->
+                  <div class="space-y-2">
+                    <button
+                      v-for="svc in group.items"
+                      :key="svc.id"
+                      type="button"
+                      @click="selectService(svc)"
+                      class="w-full flex items-center justify-between px-4 py-3 rounded-2xl border-2 text-left transition-all"
+                      :class="form.serviceId === svc.id
+                        ? 'bg-[#8B5A2B]/10 border-[#8B5A2B]'
+                        : 'bg-white border-[#E8D5B7] hover:border-[#C49A6C]'"
+                    >
+                      <div>
+                        <p class="font-semibold text-sm text-[#2D1A0E]">{{ svc.name }}</p>
+                        <p class="text-xs text-[#9E7A5A] mt-0.5">{{ svc.duration }} min</p>
+                      </div>
+                      <div
+                        class="w-5 h-5 rounded-full border-2 shrink-0 flex items-center justify-center transition-all"
+                        :class="form.serviceId === svc.id ? 'border-[#8B5A2B] bg-[#8B5A2B]' : 'border-[#D4B896]'"
+                      >
+                        <svg v-if="form.serviceId === svc.id" xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                        </svg>
+                      </div>
+                    </button>
                   </div>
-                </button>
+                </div>
               </div>
             </section>
 
@@ -182,7 +192,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useCustomerStore } from '@/stores/customer'
 
 const props = defineProps({
@@ -266,7 +276,19 @@ function nextMonth() {
   else calendarMonth.value++
 }
 
-// ── Servizi ────────────────────────────────────────────────────────────────
+// ── Servizi raggruppati per categoria ─────────────────────────────────────
+const CATEGORIES = [
+  { key: 'corti_medi', label: 'Capelli corti / media lunghezza' },
+  { key: 'lunghi',     label: 'Capelli lunghi' },
+]
+
+const groupedServices = computed(() =>
+  CATEGORIES.map(cat => ({
+    ...cat,
+    items: services.value.filter(s => (s.category || 'corti_medi') === cat.key),
+  })).filter(g => g.items.length > 0)
+)
+
 async function loadServices() {
   loadingServices.value = true
   try {

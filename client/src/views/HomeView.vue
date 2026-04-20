@@ -2,9 +2,9 @@
 import AppHeader from '../components/layout/AppHeader.vue'
 import AppFooter from '../components/layout/AppFooter.vue'
 import { RouterLink } from 'vue-router'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useApi } from '../composables/useApi.js'
-import { formatPrice, formatDuration } from '../utils/formatters.js'
+import { formatDuration } from '../utils/formatters.js'
 
 const { get } = useApi()
 const services = ref([])
@@ -12,6 +12,18 @@ const services = ref([])
 onMounted(async () => {
   services.value = await get('/services').catch(() => [])
 })
+
+const categories = [
+  { key: 'corti_medi', label: 'Capelli corti / media lunghezza' },
+  { key: 'lunghi',     label: 'Capelli lunghi' },
+]
+
+const grouped = computed(() =>
+  categories.map(cat => ({
+    ...cat,
+    items: services.value.filter(s => (s.category || 'corti_medi') === cat.key),
+  })).filter(g => g.items.length > 0)
+)
 </script>
 
 <template>
@@ -92,34 +104,42 @@ onMounted(async () => {
       </div>
 
       <!-- Loading shimmer -->
-      <div v-if="!services.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger">
-        <div v-for="i in 4" :key="i" class="shimmer h-36 animate-fade-in-up"></div>
+      <div v-if="!services.length" class="space-y-8">
+        <div v-for="i in 2" :key="i" class="space-y-4">
+          <div class="shimmer h-5 w-56 rounded-xl"></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div v-for="j in 3" :key="j" class="shimmer h-36 animate-fade-in-up"></div>
+          </div>
+        </div>
       </div>
 
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger">
-        <div
-          v-for="service in services"
-          :key="service.id"
-          class="card p-5 flex flex-col gap-3 animate-fade-in-up group hover:shadow-strong hover:-translate-y-1 transition-all duration-300"
-        >
-          <!-- Nome -->
-          <h3 class="font-semibold text-secondary text-base leading-snug group-hover:text-primary transition-colors">
-            {{ service.name }}
-          </h3>
-
-          <!-- Descrizione -->
-          <p v-if="service.description" class="text-primary/50 text-xs leading-relaxed flex-1">
-            {{ service.description }}
-          </p>
-
-          <!-- Durata badge -->
-          <div class="flex items-center gap-1.5">
-            <span class="badge">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              {{ formatDuration(service.duration) }}
-            </span>
+      <div v-else class="space-y-10">
+        <div v-for="group in grouped" :key="group.key">
+          <!-- Intestazione categoria -->
+          <div class="flex items-center gap-3 mb-5">
+            <div class="w-1 h-5 rounded-full bg-primary"></div>
+            <h3 class="text-sm font-bold text-secondary uppercase tracking-wider">{{ group.label }}</h3>
+          </div>
+          <!-- Servizi -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 stagger">
+            <div
+              v-for="service in group.items"
+              :key="service.id"
+              class="card p-5 flex flex-col gap-3 animate-fade-in-up group hover:shadow-strong hover:-translate-y-1 transition-all duration-300"
+            >
+              <h3 class="font-semibold text-secondary text-base leading-snug group-hover:text-primary transition-colors">
+                {{ service.name }}
+              </h3>
+              <p v-if="service.description" class="text-primary/50 text-xs leading-relaxed flex-1">
+                {{ service.description }}
+              </p>
+              <span class="badge self-start">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                {{ formatDuration(service.duration) }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
