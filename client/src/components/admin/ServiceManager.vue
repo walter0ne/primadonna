@@ -189,7 +189,6 @@ async function confirmDelete(id) {
             <th class="pb-3 pr-4 font-semibold">Servizio</th>
             <th class="pb-3 pr-4 font-semibold">Categoria</th>
             <th class="pb-3 pr-4 font-semibold">Durata</th>
-            <th class="pb-3 pr-4 font-semibold">Stato</th>
             <th class="pb-3 font-semibold">Azioni</th>
           </tr>
         </thead>
@@ -208,26 +207,8 @@ async function confirmDelete(id) {
               </span>
             </td>
             <td class="py-3.5 pr-4 text-primary/60">{{ formatDuration(service.duration) }}</td>
-            <td class="py-3.5 pr-4">
-              <span v-if="!service.category" class="text-primary/30 text-sm">—</span>
-              <span
-                v-else
-                class="text-xs font-semibold px-2.5 py-1 rounded-xl"
-                :class="service.category === 'lunghi' ? 'bg-purple-50 text-purple-600' : 'bg-sky-50 text-sky-600'"
-              >
-                {{ service.category === 'lunghi' ? 'Lunghi' : 'Corti / medi' }}
-              </span>
-            </td>
-            <td class="py-3.5 pr-4">
-              <div class="flex items-center gap-2">
-                <!-- Stato corrente (badge statico) -->
-                <span
-                  class="text-xs px-2.5 py-1 rounded-xl font-semibold"
-                  :class="service.isActive ? 'bg-success/10 text-success' : 'bg-beige text-primary/40 border border-accent-warm'"
-                >
-                  {{ service.isActive ? 'Attivo' : 'Inattivo' }}
-                </span>
-                <!-- Azione disabilita/abilita -->
+            <td class="py-3.5 space-y-2">
+              <div class="flex items-center gap-3">
                 <button
                   @click="toggleActive(service)"
                   class="text-xs px-2.5 py-1 rounded-xl font-semibold border transition-colors"
@@ -237,10 +218,6 @@ async function confirmDelete(id) {
                 >
                   {{ service.isActive ? 'Disabilita' : 'Abilita' }}
                 </button>
-              </div>
-            </td>
-            <td class="py-3.5 space-y-2">
-              <div class="flex items-center gap-3">
                 <button @click="openEdit(service)" class="text-primary text-xs hover:underline font-medium">
                   Modifica
                 </button>
