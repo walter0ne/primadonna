@@ -10,9 +10,14 @@ const emit = defineEmits(['updated'])
 
 const { post, put, del } = useApi()
 
-const showModal     = ref(false)
+const showModal      = ref(false)
 const editingService = ref(null)
 const form = ref({ name: '', description: '', duration: 30, price: '', sortOrder: 0 })
+
+// Conferma eliminazione
+const confirmDeleteId  = ref(null)
+const deleteError      = ref('')
+const deleting         = ref(false)
 
 function openCreate() {
   editingService.value = null
@@ -45,6 +50,38 @@ async function save() {
 async function toggleActive(service) {
   await put(`/services/${service.id}`, { ...service, isActive: !service.isActive })
   emit('updated')
+}
+
+function askDelete(id) {
+  confirmDeleteId.value = id
+  deleteError.value = ''
+}
+
+function cancelDelete() {
+  confirmDeleteId.value = null
+  deleteError.value = ''
+}
+
+async function confirmDelete(id) {
+  deleting.value = true
+  deleteError.value = ''
+  try {
+    const res = await fetch(`/api/services/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${localStorage.getItem('pd_admin_token')}` },
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      deleteError.value = data.error || 'Errore durante l\'eliminazione'
+      return
+    }
+    confirmDeleteId.value = null
+    emit('updated')
+  } catch {
+    deleteError.value = 'Errore di connessione'
+  } finally {
+    deleting.value = false
+  }
 }
 </script>
 
@@ -95,11 +132,35 @@ async function toggleActive(service) {
             >
               {{ service.isActive ? 'Attivo' : 'Inattivo' }}
             </button>
-            <button
-              @click="openEdit(service)"
-              class="btn-ghost text-xs px-3 py-1.5"
-            >
+            <button @click="openEdit(service)" class="btn-ghost text-xs px-3 py-1.5">
               Modifica
+            </button>
+            <button
+              @click="askDelete(service.id)"
+              class="w-8 h-8 rounded-xl flex items-center justify-center text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+              title="Elimina"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Conferma eliminazione (mobile) -->
+        <div v-if="confirmDeleteId === service.id" class="rounded-xl bg-red-50 border border-red-200 p-3 space-y-2">
+          <p class="text-xs font-semibold text-red-700">Eliminare «{{ service.name }}»?</p>
+          <p v-if="deleteError" class="text-xs text-red-600">{{ deleteError }}</p>
+          <div class="flex gap-2">
+            <button @click="cancelDelete" class="flex-1 text-xs py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-100 transition-colors">
+              Annulla
+            </button>
+            <button
+              @click="confirmDelete(service.id)"
+              :disabled="deleting"
+              class="flex-1 text-xs py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+            >
+              {{ deleting ? 'Eliminazione…' : 'Sì, elimina' }}
             </button>
           </div>
         </div>
@@ -139,10 +200,38 @@ async function toggleActive(service) {
                 {{ service.isActive ? 'Attivo' : 'Inattivo' }}
               </button>
             </td>
-            <td class="py-3.5">
-              <button @click="openEdit(service)" class="text-primary text-xs hover:underline font-medium">
-                Modifica
-              </button>
+            <td class="py-3.5 space-y-2">
+              <div class="flex items-center gap-3">
+                <button @click="openEdit(service)" class="text-primary text-xs hover:underline font-medium">
+                  Modifica
+                </button>
+                <button
+                  @click="askDelete(service.id)"
+                  class="text-red-400 hover:text-red-600 text-xs font-medium flex items-center gap-1 transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"/>
+                  </svg>
+                  Elimina
+                </button>
+              </div>
+              <!-- Conferma eliminazione (desktop) -->
+              <div v-if="confirmDeleteId === service.id" class="rounded-xl bg-red-50 border border-red-200 p-3 space-y-2 max-w-xs">
+                <p class="text-xs font-semibold text-red-700">Confermare l'eliminazione?</p>
+                <p v-if="deleteError" class="text-xs text-red-600">{{ deleteError }}</p>
+                <div class="flex gap-2">
+                  <button @click="cancelDelete" class="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-100 transition-colors">
+                    Annulla
+                  </button>
+                  <button
+                    @click="confirmDelete(service.id)"
+                    :disabled="deleting"
+                    class="text-xs px-3 py-1.5 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
+                  >
+                    {{ deleting ? 'Eliminazione…' : 'Sì, elimina' }}
+                  </button>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>

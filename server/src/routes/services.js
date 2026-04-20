@@ -75,12 +75,21 @@ router.put('/:id', authMiddleware, serviceValidators, validate, async (req, res,
   }
 });
 
-// DELETE /api/services/:id — soft delete
+// DELETE /api/services/:id — hard delete se nessuna prenotazione associata
 router.delete('/:id', authMiddleware, async (req, res, next) => {
   try {
     const { id } = req.params;
-    await prisma.service.update({ where: { id }, data: { isActive: false } });
-    res.json({ message: 'Servizio disattivato' });
+
+    // Controlla se ci sono prenotazioni collegate
+    const linked = await prisma.appointment.count({ where: { serviceId: id } });
+    if (linked > 0) {
+      return res.status(409).json({
+        error: `Impossibile eliminare: questo servizio è collegato a ${linked} prenotazion${linked === 1 ? 'e' : 'i'}. Puoi disattivarlo invece di eliminarlo.`,
+      });
+    }
+
+    await prisma.service.delete({ where: { id } });
+    res.json({ message: 'Servizio eliminato' });
   } catch (err) {
     next(err);
   }
