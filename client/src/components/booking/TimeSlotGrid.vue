@@ -3,24 +3,27 @@ import { ref, watch } from 'vue'
 import { useApi } from '../../composables/useApi.js'
 
 const props = defineProps({
-  serviceId: String,
-  date:      String,
-  modelValue: String,
+  serviceId:     String,
+  date:          String,
+  modelValue:    String,
+  totalDuration: { type: Number, default: null },
 })
 const emit = defineEmits(['update:modelValue'])
 
 const { get, loading } = useApi()
-const slots  = ref([])
+const slots   = ref([])
 const noSlots = ref(false)
 
 watch(
-  () => [props.date, props.serviceId],
-  async ([date, serviceId]) => {
+  () => [props.date, props.serviceId, props.totalDuration],
+  async ([date, serviceId, totalDuration]) => {
     if (!date || !serviceId) return
-    slots.value  = []
+    slots.value   = []
     noSlots.value = false
-    const res = await get(`/availability/${date}`, { serviceId })
-    slots.value  = res.slots || []
+    const params = { serviceId }
+    if (totalDuration) params.totalDuration = totalDuration
+    const res = await get(`/availability/${date}`, params)
+    slots.value   = res.slots || []
     noSlots.value = slots.value.length === 0
   },
   { immediate: true }

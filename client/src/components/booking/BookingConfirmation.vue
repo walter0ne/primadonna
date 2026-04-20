@@ -1,6 +1,6 @@
 <script setup>
 import { useBookingStore } from '../../stores/booking.js'
-import { formatDate, formatPrice, formatDuration } from '../../utils/formatters.js'
+import { formatDate, formatDuration } from '../../utils/formatters.js'
 
 const bookingStore = useBookingStore()
 </script>
@@ -20,22 +20,42 @@ const bookingStore = useBookingStore()
 
     <!-- Dettagli -->
     <div class="space-y-3">
-      <div class="flex items-center justify-between py-2 border-b border-accent/60">
-        <span class="text-xs text-primary/50 font-medium">Servizio</span>
-        <span class="font-semibold text-secondary text-sm">{{ bookingStore.selectedService?.name }}</span>
+
+      <!-- Servizi (uno o più) -->
+      <div class="py-2 border-b border-accent/60">
+        <div class="flex items-start justify-between gap-3">
+          <span class="text-xs text-primary/50 font-medium shrink-0 mt-0.5">
+            {{ bookingStore.selectedServices.length === 1 ? 'Servizio' : 'Servizi' }}
+          </span>
+          <div class="text-right space-y-0.5">
+            <p
+              v-for="s in bookingStore.selectedServices"
+              :key="s.id"
+              class="font-semibold text-secondary text-sm"
+            >
+              {{ s.name }}
+            </p>
+          </div>
+        </div>
       </div>
+
       <div class="flex items-center justify-between py-2 border-b border-accent/60">
         <span class="text-xs text-primary/50 font-medium">Data</span>
         <span class="font-semibold text-secondary text-sm capitalize">{{ formatDate(bookingStore.selectedDate) }}</span>
       </div>
+
       <div class="flex items-center justify-between py-2 border-b border-accent/60">
         <span class="text-xs text-primary/50 font-medium">Orario</span>
         <span class="font-semibold text-secondary text-sm">{{ bookingStore.selectedTime }}</span>
       </div>
+
       <div class="flex items-center justify-between py-2 border-b border-accent/60">
-        <span class="text-xs text-primary/50 font-medium">Durata</span>
-        <span class="badge">{{ formatDuration(bookingStore.selectedService?.duration) }}</span>
+        <span class="text-xs text-primary/50 font-medium">Durata totale</span>
+        <span class="badge">
+          {{ bookingStore.selectedServices.length > 1 ? 'circa ' : '' }}{{ formatDuration(bookingStore.totalDuration) }}
+        </span>
       </div>
+
     </div>
   </div>
 </template>

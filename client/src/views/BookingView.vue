@@ -12,7 +12,7 @@ import { useBookingStore } from '../stores/booking.js'
 import { useCustomerStore } from '../stores/customer.js'
 import { useApi } from '../composables/useApi.js'
 import { useToast } from '../composables/useToast.js'
-import { formatDate } from '../utils/formatters.js'
+import { formatDate, formatDuration } from '../utils/formatters.js'
 
 const bookingStore  = useBookingStore()
 const customerStore = useCustomerStore()
@@ -71,6 +71,13 @@ const canProceedStep4 = computed(() => {
   return true
 })
 
+const servicesLabel = computed(() => {
+  const svcs = bookingStore.selectedServices
+  if (svcs.length === 0) return ''
+  if (svcs.length === 1) return svcs[0].name
+  return `${svcs.length} servizi · circa ${formatDuration(bookingStore.totalDuration)}`
+})
+
 function onDateSelect(date) {
   bookingStore.selectedDate = date
   bookingStore.selectedTime = null
@@ -83,7 +90,7 @@ async function submitBooking() {
       customerPhone: bookingStore.customerData.phone,
       customerEmail: bookingStore.customerData.email,
       notes:         bookingStore.customerData.notes,
-      serviceId:     bookingStore.selectedService.id,
+      serviceIds:    bookingStore.selectedServices.map(s => s.id),
       date:          bookingStore.selectedDate,
       startTime:     bookingStore.selectedTime,
     }
@@ -235,7 +242,7 @@ async function submitBooking() {
             </button>
             <button
               class="btn-primary flex-1"
-              :disabled="!bookingStore.selectedService"
+              :disabled="!bookingStore.selectedServices.length"
               @click="bookingStore.currentStep = 3"
             >
               Continua
@@ -249,15 +256,17 @@ async function submitBooking() {
         <!-- ── STEP 3: Data e ora ─────────────────────────── -->
         <div v-else-if="bookingStore.currentStep === 3" key="step3" class="animate-fade-in-up">
 
-          <!-- Servizio scelto mini-card -->
+          <!-- Servizi scelti mini-card -->
           <div class="card p-4 flex items-center justify-between mb-6 bg-accent/30">
             <div class="flex items-center gap-3">
               <div class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary/70">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>
               </div>
               <div>
-                <p class="text-xs text-primary/50 font-medium">Servizio selezionato</p>
-                <p class="font-semibold text-secondary text-sm">{{ bookingStore.selectedService?.name }}</p>
+                <p class="text-xs text-primary/50 font-medium">
+                  {{ bookingStore.selectedServices.length === 1 ? 'Servizio selezionato' : 'Servizi selezionati' }}
+                </p>
+                <p class="font-semibold text-secondary text-sm">{{ servicesLabel }}</p>
               </div>
             </div>
             <button class="text-xs text-primary underline font-medium hover:no-underline" @click="bookingStore.goToStep(2)">
@@ -287,8 +296,9 @@ async function submitBooking() {
                 <span class="text-primary font-semibold capitalize ml-1">{{ formatDate(bookingStore.selectedDate) }}</span>
               </p>
               <TimeSlotGrid
-                :service-id="bookingStore.selectedService?.id"
+                :service-id="bookingStore.primaryService?.id"
                 :date="bookingStore.selectedDate"
+                :total-duration="bookingStore.totalDuration"
                 v-model="bookingStore.selectedTime"
               />
             </div>

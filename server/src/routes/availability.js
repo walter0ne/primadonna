@@ -7,7 +7,7 @@ const validate = require('../middleware/validate');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// GET /api/availability/:date?serviceId=xxx
+// GET /api/availability/:date?serviceId=xxx[&totalDuration=yyy]
 router.get(
   '/:date',
   [
@@ -18,7 +18,7 @@ router.get(
   async (req, res, next) => {
     try {
       const { date } = req.params;
-      const { serviceId } = req.query;
+      const { serviceId, totalDuration } = req.query;
 
       const service = await prisma.service.findUnique({
         where: { id: serviceId, isActive: true },
@@ -35,8 +35,10 @@ router.get(
         return res.json({ slots: [], message: 'Data passata' });
       }
 
-      const slots = await getAvailableSlots(date, service.duration);
-      res.json({ slots, date, serviceId, serviceDuration: service.duration });
+      // Se il cliente ha selezionato più servizi, usa la durata totale passata dal frontend
+      const duration = totalDuration ? parseInt(totalDuration, 10) : service.duration;
+      const slots = await getAvailableSlots(date, duration);
+      res.json({ slots, date, serviceId, serviceDuration: duration });
     } catch (err) {
       next(err);
     }

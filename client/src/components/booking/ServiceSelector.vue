@@ -25,15 +25,24 @@ const filtered = computed(() =>
 
 <template>
   <div>
-    <p class="text-primary/50 text-sm mb-6">Seleziona il servizio che desideri prenotare</p>
+    <p class="text-primary/50 text-sm mb-3">Seleziona uno o più servizi da prenotare</p>
+
+    <!-- Riepilogo selezione corrente -->
+    <div
+      v-if="bookingStore.selectedServices.length > 0"
+      class="mb-5 flex items-center gap-2 flex-wrap"
+    >
+      <span class="badge bg-primary/10 text-primary border border-primary/20 text-xs font-semibold px-3 py-1.5">
+        {{ bookingStore.selectedServices.length }}
+        {{ bookingStore.selectedServices.length === 1 ? 'servizio selezionato' : 'servizi selezionati' }}
+        · circa {{ formatDuration(bookingStore.totalDuration) }}
+      </span>
+    </div>
 
     <!-- Loading shimmer -->
-    <div v-if="loading" class="space-y-6">
-      <div v-for="i in 2" :key="i" class="space-y-3">
-        <div class="shimmer h-5 w-48 rounded-xl"></div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div v-for="j in 3" :key="j" class="shimmer h-28 animate-fade-in-up"></div>
-        </div>
+    <div v-if="loading" class="space-y-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div v-for="i in 4" :key="i" class="shimmer h-28 animate-fade-in-up"></div>
       </div>
     </div>
 
@@ -48,16 +57,16 @@ const filtered = computed(() =>
         v-for="service in filtered"
         :key="service.id"
         class="card p-4 text-left transition-all duration-200 hover:shadow-strong focus:outline-none focus:ring-2 focus:ring-primary/30 animate-fade-in-up"
-        :class="bookingStore.selectedService?.id === service.id
+        :class="bookingStore.isServiceSelected(service.id)
           ? 'border-2 border-primary bg-accent/40 shadow-card -translate-y-0.5'
           : 'border border-accent-warm hover:-translate-y-0.5'"
-        @click="bookingStore.selectService(service)"
+        @click="bookingStore.toggleService(service)"
       >
         <div class="flex items-start justify-between gap-3 mb-2">
           <h3 class="font-semibold text-secondary text-sm leading-snug">{{ service.name }}</h3>
           <div
             class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200"
-            :class="bookingStore.selectedService?.id === service.id
+            :class="bookingStore.isServiceSelected(service.id)
               ? 'bg-primary text-beige-light scale-110'
               : 'bg-accent border border-accent-warm text-transparent'"
           >

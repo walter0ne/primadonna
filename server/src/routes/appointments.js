@@ -17,7 +17,8 @@ router.post(
     body('customerName').trim().notEmpty().withMessage('Nome obbligatorio'),
     body('customerPhone').trim().notEmpty().withMessage('Telefono obbligatorio'),
     body('customerEmail').isEmail().normalizeEmail().withMessage('Email non valida'),
-    body('serviceId').notEmpty().withMessage('Servizio obbligatorio'),
+    body('serviceIds').optional().isArray({ min: 1 }).withMessage('Almeno un servizio obbligatorio'),
+    body('serviceId').optional().notEmpty(),
     body('date').isDate().withMessage('Data non valida'),
     body('startTime').matches(/^([01]\d|2[0-3]):[0-5]\d$/).withMessage('Orario non valido'),
     body('notes').optional().trim().isLength({ max: 500 }),
@@ -25,20 +26,45 @@ router.post(
   validate,
   async (req, res, next) => {
     try {
-      const { customerName, customerPhone, customerEmail, serviceId, date, startTime, notes } = req.body;
+      const { customerName, customerPhone, customerEmail, date, startTime, notes } = req.body;
 
-      const service = await prisma.service.findUnique({ where: { id: serviceId, isActive: true } });
-      if (!service) return res.status(404).json({ error: 'Servizio non trovato' });
+      // Supporta sia serviceIds[] (multi-servizio) che serviceId singolo (retrocompatibilità)
+      const serviceIds = Array.isArray(req.body.serviceIds) && req.body.serviceIds.length > 0
+        ? req.body.serviceIds
+        : req.body.serviceId
+          ? [req.body.serviceId]
+          : [];
 
-      // Verifica che lo slot sia disponibile
-      const availableSlots = await getAvailableSlots(date, service.duration);
+      if (serviceIds.length === 0) {
+        return res.status(400).json({ error: 'Almeno un servizio obbligatorio' });
+      }
+
+      // Recupera tutti i servizi richiesti
+      const services = await prisma.service.findMany({
+        where: { id: { in: serviceIds }, isActive: true },
+      });
+
+      if (services.length !== serviceIds.length) {
+        return res.status(404).json({ error: 'Uno o più servizi non trovati o non disponibili' });
+      }
+
+      // Calcola la durata totale
+      const totalDuration = services.reduce((sum, s) => sum + s.duration, 0);
+
+      // Verifica che lo slot sia disponibile per la durata totale
+      const availableSlots = await getAvailableSlots(date, totalDuration);
       if (!availableSlots.includes(startTime)) {
         return res.status(409).json({ error: 'Slot non disponibile. Riprova con un altro orario.' });
       }
 
       // Calcola endTime
-      const endMinutes = timeToMinutes(startTime) + service.duration;
+      const endMinutes = timeToMinutes(startTime) + totalDuration;
       const endTime = minutesToTime(endMinutes);
+
+      // Servizio primario = primo della lista (mantiene l'ordine del frontend)
+      const primaryServiceId       = serviceIds[0];
+      const additionalServiceIds   = serviceIds.slice(1);
+      const primaryService         = services.find(s => s.id === primaryServiceId);
 
       // Se il cliente è loggato, collega la prenotazione al suo account
       let customerId = null;
@@ -55,7 +81,8 @@ router.post(
           customerName,
           customerPhone,
           customerEmail,
-          serviceId,
+          serviceId: primaryServiceId,
+          additionalServiceIds,
           date: new Date(date + 'T00:00:00.000Z'),
           startTime,
           endTime,
@@ -67,10 +94,10 @@ router.post(
       });
 
       // Invia email di conferma al cliente (non-blocking)
-      sendBookingConfirmation(appointment, appointment.service).catch(console.error);
+      sendBookingConfirmation(appointment, primaryService).catch(console.error);
 
       // Invia notifica nuova prenotazione all'admin (non-blocking)
-      sendAdminBookingNotification(appointment, appointment.service).catch(console.error);
+      sendAdminBookingNotification(appointment, primaryService).catch(console.error);
 
       res.status(201).json(appointment);
     } catch (err) {

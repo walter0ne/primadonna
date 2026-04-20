@@ -1,19 +1,27 @@
 <script setup>
-import { onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import AppHeader from '../components/layout/AppHeader.vue'
 import AppFooter from '../components/layout/AppFooter.vue'
 import { useBookingStore } from '../stores/booking.js'
-import { formatDate, formatPrice } from '../utils/formatters.js'
+import { formatDate, formatDuration } from '../utils/formatters.js'
 
 const bookingStore = useBookingStore()
 
-const service = bookingStore.selectedService
-const date    = bookingStore.selectedDate
-const time    = bookingStore.selectedTime
+// Salva i dati prima del reset
+const services      = [...(bookingStore.selectedServices || [])]
+const date          = bookingStore.selectedDate
+const time          = bookingStore.selectedTime
+const totalDuration = bookingStore.totalDuration
 
 onMounted(() => {
   bookingStore.reset()
+})
+
+const servicesLabel = computed(() => {
+  if (services.length === 0) return ''
+  if (services.length === 1) return services[0].name
+  return services.map(s => s.name).join(', ')
 })
 </script>
 
@@ -46,7 +54,7 @@ onMounted(() => {
 
         <!-- Card dettagli -->
         <div
-          v-if="service && date"
+          v-if="services.length > 0 && date"
           class="card p-5 text-left mb-8 bg-gradient-to-br from-accent/30 to-beige animate-fade-in-up"
           style="animation-delay: 0.2s"
         >
@@ -56,9 +64,20 @@ onMounted(() => {
           </div>
 
           <div class="space-y-3">
-            <div class="flex items-center justify-between">
-              <span class="text-xs text-primary/50 font-medium">Servizio</span>
-              <span class="font-semibold text-secondary text-sm">{{ service?.name }}</span>
+            <!-- Servizi -->
+            <div class="flex items-start justify-between gap-3">
+              <span class="text-xs text-primary/50 font-medium shrink-0 mt-0.5">
+                {{ services.length === 1 ? 'Servizio' : 'Servizi' }}
+              </span>
+              <div class="text-right space-y-0.5">
+                <p
+                  v-for="s in services"
+                  :key="s.id"
+                  class="font-semibold text-secondary text-sm"
+                >
+                  {{ s.name }}
+                </p>
+              </div>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-xs text-primary/50 font-medium">Data</span>
@@ -67,6 +86,12 @@ onMounted(() => {
             <div class="flex items-center justify-between">
               <span class="text-xs text-primary/50 font-medium">Orario</span>
               <span class="font-semibold text-secondary text-sm">{{ time }}</span>
+            </div>
+            <div v-if="totalDuration" class="flex items-center justify-between">
+              <span class="text-xs text-primary/50 font-medium">Durata totale</span>
+              <span class="badge">
+                {{ services.length > 1 ? 'circa ' : '' }}{{ formatDuration(totalDuration) }}
+              </span>
             </div>
           </div>
         </div>

@@ -53,8 +53,9 @@ model Appointment {
   endTime       String
   notes         String?
   status        AppointmentStatus @default(CONFIRMED)
-  service       Service           @relation(fields: [serviceId], references: [id])
-  serviceId     String
+  service              Service           @relation(fields: [serviceId], references: [id])
+  serviceId            String
+  additionalServiceIds String[]          @default([])
   // Cliente registrato (opzionale: funziona anche senza account)
   customer      Customer?         @relation(fields: [customerId], references: [id])
   customerId    String?
