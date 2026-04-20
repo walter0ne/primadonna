@@ -35,7 +35,7 @@ model Service {
   description  String?
   duration     Int
   price        Decimal       @db.Decimal(10, 2)
-  category     String        @default("corti_medi")
+  category     String?
   isActive     Boolean       @default(true)
   sortOrder    Int           @default(0)
   createdAt    DateTime      @default(now())

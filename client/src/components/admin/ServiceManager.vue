@@ -209,6 +209,16 @@ async function confirmDelete(id) {
             </td>
             <td class="py-3.5 pr-4 text-primary/60">{{ formatDuration(service.duration) }}</td>
             <td class="py-3.5 pr-4">
+              <span v-if="!service.category" class="text-primary/30 text-sm">—</span>
+              <span
+                v-else
+                class="text-xs font-semibold px-2.5 py-1 rounded-xl"
+                :class="service.category === 'lunghi' ? 'bg-purple-50 text-purple-600' : 'bg-sky-50 text-sky-600'"
+              >
+                {{ service.category === 'lunghi' ? 'Lunghi' : 'Corti / medi' }}
+              </span>
+            </td>
+            <td class="py-3.5 pr-4">
               <div class="flex items-center gap-2">
                 <!-- Stato corrente (badge statico) -->
                 <span

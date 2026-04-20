@@ -46,7 +46,7 @@ router.post('/', authMiddleware, serviceValidators, validate, async (req, res, n
   try {
     const { name, description, duration, price, category, sortOrder } = req.body;
     const service = await prisma.service.create({
-      data: { name, description, duration: Number(duration), price: price !== undefined ? Number(price) : 0, category: category || 'corti_medi', sortOrder: sortOrder ? Number(sortOrder) : 0 },
+      data: { name, description, duration: Number(duration), price: price !== undefined ? Number(price) : 0, category: category || null, sortOrder: sortOrder ? Number(sortOrder) : 0 },
     });
     res.status(201).json(service);
   } catch (err) {
@@ -66,7 +66,7 @@ router.put('/:id', authMiddleware, serviceValidators, validate, async (req, res,
         description,
         duration: Number(duration),
         ...(price !== undefined && price !== '' ? { price: Number(price) } : {}),
-        ...(category ? { category } : {}),
+        category: category || null,
         sortOrder: sortOrder !== undefined ? Number(sortOrder) : undefined,
         isActive: isActive !== undefined ? Boolean(isActive) : undefined,
       },
